@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Wozzer"
+version = "1.0.0"
+id = "artifacts/wozzer"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 24692
+
+[services.development]
+run = "pnpm --filter @workspace/wozzer run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/wozzer", "run", "build" ]
+publicDir = "artifacts/wozzer/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24692"
+BASE_PATH = "/"
