@@ -4,38 +4,37 @@ import { PostCard } from "@/components/post-card";
 import { RoleBadge } from "@/components/role-badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { 
-  useGetUserProfile, 
-  useListUserPosts, 
-  useFollowUser, 
-  useUnfollowUser, 
+import {
+  useGetUserProfile,
+  useListUserPosts,
+  useFollowUser,
+  useUnfollowUser,
   useGetFollowStatus,
   getGetFollowStatusQueryKey,
-  getGetUserProfileQueryKey
+  getGetUserProfileQueryKey,
 } from "@workspace/api-client-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
-import { MapPin, Link as LinkIcon, CalendarDays } from "lucide-react";
+import { Link as LinkIcon, CalendarDays } from "lucide-react";
 import { format } from "date-fns";
 
 export default function Profile() {
-  const [match, params] = useRoute("/profile/:username");
+  const [, params] = useRoute("/profile/:username");
   const username = params?.username;
   const { user: currentUser } = useAuth();
   const queryClient = useQueryClient();
 
   const isOwnProfile = currentUser?.username === username;
 
-  const { data: profile, isLoading: isProfileLoading } = useGetUserProfile(username!, {
-    query: { enabled: !!username }
-  });
+  const { data: profile, isLoading: isProfileLoading } = useGetUserProfile(username ?? "");
 
-  const { data: postsData, isLoading: isPostsLoading } = useListUserPosts(username!, {
-    query: { enabled: !!username }
-  });
+  const { data: postsData, isLoading: isPostsLoading } = useListUserPosts(username ?? "");
 
-  const { data: followStatus } = useGetFollowStatus(username!, {
-    query: { enabled: !!username && !isOwnProfile }
+  const { data: followStatus } = useGetFollowStatus(username ?? "", {
+    query: {
+      queryKey: getGetFollowStatusQueryKey(username ?? ""),
+      enabled: !!username && !isOwnProfile,
+    }
   });
 
   const followMutation = useFollowUser();
@@ -45,9 +44,9 @@ export default function Profile() {
     if (!username) return;
     try {
       if (followStatus?.isFollowing) {
-        await unfollowMutation.mutateAsync({ data: { username } });
+        await unfollowMutation.mutateAsync({ username });
       } else {
-        await followMutation.mutateAsync({ data: { username } });
+        await followMutation.mutateAsync({ username });
       }
       queryClient.invalidateQueries({ queryKey: getGetFollowStatusQueryKey(username) });
       queryClient.invalidateQueries({ queryKey: getGetUserProfileQueryKey(username) });
@@ -91,7 +90,7 @@ export default function Profile() {
               <p className="text-muted-foreground">@{profile.username}</p>
             </div>
             {!isOwnProfile && (
-              <Button 
+              <Button
                 variant={followStatus?.isFollowing ? "outline" : "default"}
                 onClick={handleFollowToggle}
                 disabled={followMutation.isPending || unfollowMutation.isPending}
@@ -115,13 +114,13 @@ export default function Profile() {
               <div className="flex items-center gap-2 text-primary">
                 <LinkIcon className="h-4 w-4" />
                 <a href={profile.projectLinks[0]} target="_blank" rel="noopener noreferrer" className="hover:underline font-medium truncate">
-                  {profile.projectLinks[0].replace(/^https?:\/\//, '')}
+                  {profile.projectLinks[0].replace(/^https?:\/\//, "")}
                 </a>
               </div>
             )}
             <div className="flex items-center gap-2 text-muted-foreground text-sm">
               <CalendarDays className="h-4 w-4" />
-              <span>Joined {format(new Date(profile.createdAt), 'MMMM yyyy')}</span>
+              <span>Joined {format(new Date(profile.createdAt), "MMMM yyyy")}</span>
             </div>
           </div>
 

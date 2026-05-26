@@ -4,23 +4,24 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { 
-  useStartOnboarding, 
-  useOnboardingChat, 
-  useCompleteOnboarding, 
-  useSubmitBuilderSkills, 
+import {
+  useStartOnboarding,
+  useOnboardingChat,
+  useCompleteOnboarding,
+  useSubmitBuilderSkills,
   useSubmitBuilderChallenge,
   OnboardingState,
-  OnboardingStartInputPath
 } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Loader2, Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Onboarding() {
-  const { user, login } = useAuth();
+  const { user } = useAuth();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  
+  const queryClient = useQueryClient();
+
   const [state, setState] = useState<OnboardingState | null>(null);
   const [chatInput, setChatInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -36,7 +37,7 @@ export default function Onboarding() {
   const [challengeAnswer, setChallengeAnswer] = useState("");
 
   const PRESET_SKILLS = [
-    "React", "Node.js", "Python", "Rust", "Go", 
+    "React", "Node.js", "Python", "Rust", "Go",
     "Machine Learning", "iOS", "Android", "Hardware", "UI/UX Design"
   ];
 
@@ -56,9 +57,6 @@ export default function Onboarding() {
     try {
       const res = await startOnboarding.mutateAsync({ data: { path } });
       setState(res);
-      if (path === "builder") {
-        // Builder path is handled separately from chat state initially
-      }
     } catch (e: any) {
       toast({ title: "Error", description: e.message, variant: "destructive" });
     }
@@ -70,8 +68,7 @@ export default function Onboarding() {
 
     const msg = chatInput;
     setChatInput("");
-    
-    // Optimistic UI
+
     setState(prev => prev ? {
       ...prev,
       messages: [...prev.messages, { role: "user", content: msg, timestamp: new Date().toISOString() }]
@@ -87,7 +84,8 @@ export default function Onboarding() {
 
   const handleCompleteVisionary = async () => {
     try {
-      const userRes = await completeMutation.mutateAsync({ data: { summary: state?.summary || "" } });
+      await completeMutation.mutateAsync({ data: { summary: state?.summary || "" } });
+      queryClient.invalidateQueries();
       setLocation("/feed");
     } catch (e: any) {
       toast({ title: "Error", description: e.message, variant: "destructive" });
@@ -107,12 +105,13 @@ export default function Onboarding() {
   const handleBuilderChallengeSubmit = async () => {
     if (!challengeAnswer.trim() || !challengePrompt) return;
     try {
-      const res = await submitChallenge.mutateAsync({ 
-        data: { challengeId: challengePrompt.id, answer: challengeAnswer } 
+      const res = await submitChallenge.mutateAsync({
+        data: { challengeId: challengePrompt.id, answer: challengeAnswer }
       });
       if (res.passed) {
         toast({ title: "Passed!", description: res.feedback });
-        const userRes = await completeMutation.mutateAsync({ data: { summary: "Builder verified" } });
+        await completeMutation.mutateAsync({ data: { summary: "Builder verified" } });
+        queryClient.invalidateQueries();
         setLocation("/feed");
       } else {
         toast({ title: "Keep trying", description: res.feedback, variant: "destructive" });
@@ -129,7 +128,7 @@ export default function Onboarding() {
           <h1 className="text-3xl font-bold">Choose your path</h1>
           <p className="text-muted-foreground">Wozzer is a network for both ideas and execution. How do you identify?</p>
           <div className="grid md:grid-cols-2 gap-6">
-            <button 
+            <button
               onClick={() => handleStartPath("visionary")}
               className="bg-card border border-border rounded-xl p-8 text-left hover:border-amber-500/50 hover:bg-amber-500/5 transition-all group"
               disabled={startOnboarding.isPending}
@@ -137,7 +136,7 @@ export default function Onboarding() {
               <h2 className="text-2xl font-bold text-amber-500 mb-2">Visionary</h2>
               <p className="text-muted-foreground group-hover:text-foreground transition-colors">You have the ideas. You see the future. Be prepared to defend your vision against our AI inquisitor.</p>
             </button>
-            <button 
+            <button
               onClick={() => handleStartPath("builder")}
               className="bg-card border border-border rounded-xl p-8 text-left hover:border-cyan-500/50 hover:bg-cyan-500/5 transition-all group"
               disabled={startOnboarding.isPending}
@@ -151,7 +150,6 @@ export default function Onboarding() {
     );
   }
 
-  // Visionary Flow
   if (state?.phase === "interview") {
     return (
       <div className="min-h-screen bg-background flex flex-col max-w-3xl mx-auto p-4 md:p-8">
@@ -160,8 +158,8 @@ export default function Onboarding() {
           <ScrollArea className="flex-1 p-4" ref={scrollRef}>
             <div className="space-y-6">
               {state.messages.map((m, i) => (
-                <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[80%] rounded-xl p-4 ${m.role === 'user' ? 'bg-amber-500 text-amber-950 font-medium' : 'bg-secondary text-foreground'}`}>
+                <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+                  <div className={`max-w-[80%] rounded-xl p-4 ${m.role === "user" ? "bg-amber-500 text-amber-950 font-medium" : "bg-secondary text-foreground"}`}>
                     <div className="whitespace-pre-wrap">{m.content}</div>
                   </div>
                 </div>
@@ -178,9 +176,9 @@ export default function Onboarding() {
           </ScrollArea>
           <div className="p-4 border-t border-border bg-background">
             <form onSubmit={handleChatSubmit} className="flex gap-2">
-              <Input 
-                value={chatInput} 
-                onChange={(e) => setChatInput(e.target.value)} 
+              <Input
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
                 placeholder="Defend your idea..."
                 className="flex-1"
                 disabled={chatMutation.isPending}
@@ -214,7 +212,6 @@ export default function Onboarding() {
     );
   }
 
-  // Builder Flow
   if (state && !challengePrompt) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
@@ -226,19 +223,19 @@ export default function Onboarding() {
               <button
                 key={skill}
                 onClick={() => {
-                  setBuilderSkills(prev => 
+                  setBuilderSkills(prev =>
                     prev.includes(skill) ? prev.filter(s => s !== skill) : [...prev, skill]
-                  )
+                  );
                 }}
-                className={`px-4 py-2 rounded-full border transition-colors ${builderSkills.includes(skill) ? 'bg-cyan-500/20 border-cyan-500 text-cyan-500' : 'bg-transparent border-border text-muted-foreground hover:border-cyan-500/50'}`}
+                className={`px-4 py-2 rounded-full border transition-colors ${builderSkills.includes(skill) ? "bg-cyan-500/20 border-cyan-500 text-cyan-500" : "bg-transparent border-border text-muted-foreground hover:border-cyan-500/50"}`}
               >
                 {skill}
               </button>
             ))}
           </div>
-          <Button 
-            onClick={handleBuilderSkillsSubmit} 
-            className="w-full" 
+          <Button
+            onClick={handleBuilderSkillsSubmit}
+            className="w-full"
             disabled={builderSkills.length === 0 || submitSkills.isPending}
           >
             {submitSkills.isPending ? "Generating challenge..." : "Submit Skills"}
@@ -262,8 +259,8 @@ export default function Onboarding() {
             value={challengeAnswer}
             onChange={(e) => setChallengeAnswer(e.target.value)}
           />
-          <Button 
-            onClick={handleBuilderChallengeSubmit} 
+          <Button
+            onClick={handleBuilderChallengeSubmit}
             className="w-full"
             disabled={!challengeAnswer.trim() || submitChallenge.isPending}
           >

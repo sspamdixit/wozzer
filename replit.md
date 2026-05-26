@@ -22,7 +22,7 @@ A social network MVP for young builders aged 13-18. Users get vetted through an 
 - AI: Google Gemini 2.0 Flash via @google/generative-ai
 - Validation: Zod (zod/v4), drizzle-zod
 - API codegen: Orval (from OpenAPI spec)
-- Auth: JWT-style bearer tokens stored in localStorage as "wozzer_token"
+- Auth: Clerk (Google, GitHub, Apple, email) — session cookies for web, JIT user provisioning on first sign-in
 - Build: esbuild (CJS bundle)
 
 ## Where things live
@@ -36,7 +36,8 @@ A social network MVP for young builders aged 13-18. Users get vetted through an 
 
 ## Architecture decisions
 
-- Bearer token auth: tokens stored in localStorage, passed as Authorization header. In-memory token store on server (resets on restart — suitable for MVP, replace with DB sessions for production).
+- Clerk auth: session cookies managed by Clerk. `clerkMiddleware` in `app.ts` validates every request. `requireAuth` middleware reads the Clerk session via `getAuth(req)` and JIT-provisions a local DB user on first sign-in (keyed by `clerkId`). No manual token management needed.
+- Enable/disable social providers (Google, GitHub, Apple) from the Auth pane in the workspace toolbar.
 - AI onboarding uses Gemini 2.0 Flash. Visionary path: structured JSON response signals when to give homework. Builder path: challenge generation + evaluation in two separate calls.
 - Follow counts are stored as denormalized integers on the users table for fast reads. They're updated on follow/unfollow.
 - Feed is chronological — shows posts from followed users + self. No algorithm.
@@ -45,8 +46,8 @@ A social network MVP for young builders aged 13-18. Users get vetted through an 
 ## Product
 
 - **Landing** `/` — splash with Apply Now / Log In
-- **Register** `/register` — sign up with username, email, password, displayName
-- **Login** `/login` — email + password
+- **Sign Up** `/sign-up` — Clerk-powered: Google, GitHub, Apple, or email/password
+- **Sign In** `/sign-in` — Clerk-powered sign-in page
 - **Onboarding** `/onboarding` — two paths: Visionary (AI chat interview → homework) or Builder (skill select → AI challenge)
 - **Feed** `/feed` — chronological post feed with composer + suggested users sidebar
 - **Profile** `/profile/:username` — public profile with role badge, skills, project links, posts
@@ -63,7 +64,7 @@ A social network MVP for young builders aged 13-18. Users get vetted through an 
 
 - Always run `pnpm --filter @workspace/api-spec run codegen` after changing openapi.yaml
 - Always run `pnpm --filter @workspace/db run push` after changing schema files
-- In-memory session store resets on server restart (users must log in again) — replace with DB sessions before production
+- Clerk dev keys are used in development (shows "Development mode" banner on sign-in page — normal, disappears in production)
 - Gemini JSON parsing uses regex match for robustness (AI occasionally adds markdown fences)
 
 ## Pointers

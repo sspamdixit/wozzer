@@ -1,38 +1,29 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { useGetMe, User } from "@workspace/api-client-react";
+import { createContext, useContext, ReactNode } from "react";
+import { useUser } from "@clerk/react";
+import { useGetMe, getGetMeQueryKey, User } from "@workspace/api-client-react";
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  login: (token: string) => void;
-  logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [token, setToken] = useState<string | null>(localStorage.getItem("wozzer_token"));
+  const { isSignedIn, isLoaded: clerkLoaded } = useUser();
 
-  const { data: user, isLoading, refetch } = useGetMe({
+  const { data: user, isLoading: userLoading } = useGetMe({
     query: {
-      enabled: !!token,
+      queryKey: getGetMeQueryKey(),
+      enabled: !!isSignedIn,
       retry: false,
     }
   });
 
-  const login = (newToken: string) => {
-    localStorage.setItem("wozzer_token", newToken);
-    setToken(newToken);
-    refetch();
-  };
-
-  const logout = () => {
-    localStorage.removeItem("wozzer_token");
-    setToken(null);
-  };
+  const isLoading = !clerkLoaded || (!!isSignedIn && userLoading);
 
   return (
-    <AuthContext.Provider value={{ user: user || null, isLoading, login, logout }}>
+    <AuthContext.Provider value={{ user: user || null, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

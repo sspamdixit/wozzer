@@ -1,23 +1,17 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
-import { useLogout } from "@workspace/api-client-react";
+import { useClerk } from "@clerk/react";
 import { LogOut, Home, User, Settings, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function Layout({ children }: { children: ReactNode }) {
-  const { user, logout: clearAuth } = useAuth();
-  const [location, setLocation] = useLocation();
-  const logoutMutation = useLogout();
+  const { user } = useAuth();
+  const { signOut } = useClerk();
+  const [location] = useLocation();
 
-  const handleLogout = async () => {
-    try {
-      await logoutMutation.mutateAsync();
-    } catch (e) {
-      // Ignore errors on logout
-    }
-    clearAuth();
-    setLocation("/");
+  const handleLogout = () => {
+    signOut({ redirectUrl: "/" });
   };
 
   const isActive = (path: string) => {
@@ -45,12 +39,12 @@ export function Layout({ children }: { children: ReactNode }) {
           <Home className="h-5 w-5" />
           <span className="hidden md:inline">Feed</span>
         </Link>
-        
+
         <Link href={`/profile/${user?.username}`} className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${isActive(`/profile/${user?.username}`) ? "bg-secondary text-foreground font-medium" : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"}`}>
           <User className="h-5 w-5" />
           <span className="hidden md:inline">Profile</span>
         </Link>
-        
+
         <Link href="/settings" className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${isActive("/settings") ? "bg-secondary text-foreground font-medium" : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"}`}>
           <Settings className="h-5 w-5" />
           <span className="hidden md:inline">Settings</span>
