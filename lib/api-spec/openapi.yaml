@@ -1,22 +1,33 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Wozzer social network API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication
+  - name: onboarding
+    description: Onboarding interview flow
+  - name: users
+    description: User profiles
+  - name: posts
+    description: Feed posts
+  - name: follows
+    description: Follow system
+  - name: feed
+    description: Feed and suggestions
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,13 +35,673 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # Auth
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+      responses:
+        "201":
+          description: Registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Username or email already taken
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Log in
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Log out
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current authenticated user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # Onboarding
+  /onboarding/start:
+    post:
+      operationId: startOnboarding
+      tags: [onboarding]
+      summary: Start onboarding — choose path (visionary or builder)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OnboardingStartInput"
+      responses:
+        "200":
+          description: Onboarding started, returns first AI message
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OnboardingState"
+
+  /onboarding/chat:
+    post:
+      operationId: onboardingChat
+      tags: [onboarding]
+      summary: Send a message in the onboarding AI interview
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OnboardingChatInput"
+      responses:
+        "200":
+          description: AI reply and updated state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OnboardingState"
+
+  /onboarding/complete:
+    post:
+      operationId: completeOnboarding
+      tags: [onboarding]
+      summary: Finalize onboarding and unlock the feed
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OnboardingCompleteInput"
+      responses:
+        "200":
+          description: Onboarding complete, returns user profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /onboarding/builder/skills:
+    post:
+      operationId: submitBuilderSkills
+      tags: [onboarding]
+      summary: Submit skills for builder path
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BuilderSkillsInput"
+      responses:
+        "200":
+          description: Builder skill challenge returned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BuilderChallenge"
+
+  /onboarding/builder/challenge:
+    post:
+      operationId: submitBuilderChallenge
+      tags: [onboarding]
+      summary: Submit builder challenge answer for verification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BuilderChallengeInput"
+      responses:
+        "200":
+          description: Challenge result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BuilderChallengeResult"
+
+  # Users / Profiles
+  /users/{username}:
+    get:
+      operationId: getUserProfile
+      tags: [users]
+      summary: Get a user's public profile
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /users/{username}/posts:
+    get:
+      operationId: listUserPosts
+      tags: [users]
+      summary: Get posts by a user
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User posts paginated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostPage"
+
+  /users/me/profile:
+    patch:
+      operationId: updateMyProfile
+      tags: [users]
+      summary: Update current user's profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProfileUpdate"
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  # Posts
+  /posts:
+    get:
+      operationId: getFeed
+      tags: [feed]
+      summary: Get chronological feed for current user
+      parameters:
+        - name: cursor
+          in: query
+          schema:
+            type: ["string", "null"]
+      responses:
+        "200":
+          description: Feed posts paginated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostPage"
+    post:
+      operationId: createPost
+      tags: [posts]
+      summary: Create a new post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostInput"
+      responses:
+        "201":
+          description: Post created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+
+  /posts/{postId}:
+    delete:
+      operationId: deletePost
+      tags: [posts]
+      summary: Delete a post
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  # Follows
+  /follows/{username}:
+    post:
+      operationId: followUser
+      tags: [follows]
+      summary: Follow a user
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Now following
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+    delete:
+      operationId: unfollowUser
+      tags: [follows]
+      summary: Unfollow a user
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Unfollowed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /follows/{username}/status:
+    get:
+      operationId: getFollowStatus
+      tags: [follows]
+      summary: Check if current user follows a user
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Follow status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FollowStatus"
+
+  # Feed
+  /feed/suggested:
+    get:
+      operationId: getSuggestedUsers
+      tags: [feed]
+      summary: Get suggested users to follow based on onboarding profile match
+      responses:
+        "200":
+          description: Suggested users list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserProfile"
+
 components:
   schemas:
     HealthStatus:
       type: object
+      required: [status]
       properties:
         status:
           type: string
-      required:
-        - status
 
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+
+    SuccessResponse:
+      type: object
+      required: [success]
+      properties:
+        success:
+          type: boolean
+
+    RegisterInput:
+      type: object
+      required: [username, email, password, displayName]
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 30
+        email:
+          type: string
+        password:
+          type: string
+          minLength: 8
+        displayName:
+          type: string
+          minLength: 1
+          maxLength: 60
+
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+
+    AuthResponse:
+      type: object
+      required: [user, token]
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        token:
+          type: string
+
+    User:
+      type: object
+      required: [id, username, email, displayName, role, onboardingComplete, followersCount, followingCount, createdAt]
+      properties:
+        id:
+          type: string
+        username:
+          type: string
+        email:
+          type: string
+        displayName:
+          type: string
+        bio:
+          type: ["string", "null"]
+        avatarUrl:
+          type: ["string", "null"]
+        role:
+          type: ["string", "null"]
+          enum: [visionary, builder, null]
+        level:
+          type: ["integer", "null"]
+        skills:
+          type: array
+          items:
+            type: string
+        projectLinks:
+          type: array
+          items:
+            type: string
+        onboardingComplete:
+          type: boolean
+        followersCount:
+          type: integer
+        followingCount:
+          type: integer
+        createdAt:
+          type: string
+
+    UserProfile:
+      type: object
+      required: [id, username, displayName, role, followersCount, followingCount, createdAt]
+      properties:
+        id:
+          type: string
+        username:
+          type: string
+        displayName:
+          type: string
+        bio:
+          type: ["string", "null"]
+        avatarUrl:
+          type: ["string", "null"]
+        role:
+          type: ["string", "null"]
+          enum: [visionary, builder, null]
+        level:
+          type: ["integer", "null"]
+        skills:
+          type: array
+          items:
+            type: string
+        projectLinks:
+          type: array
+          items:
+            type: string
+        followersCount:
+          type: integer
+        followingCount:
+          type: integer
+        createdAt:
+          type: string
+        matchScore:
+          type: ["number", "null"]
+
+    ProfileUpdate:
+      type: object
+      properties:
+        bio:
+          type: string
+        displayName:
+          type: string
+        projectLinks:
+          type: array
+          items:
+            type: string
+
+    OnboardingStartInput:
+      type: object
+      required: [path]
+      properties:
+        path:
+          type: string
+          enum: [visionary, builder]
+
+    OnboardingChatInput:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+
+    OnboardingCompleteInput:
+      type: object
+      required: [summary]
+      properties:
+        summary:
+          type: string
+
+    OnboardingState:
+      type: object
+      required: [sessionId, messages, phase, isComplete]
+      properties:
+        sessionId:
+          type: string
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChatMessage"
+        phase:
+          type: string
+          enum: [interview, homework, complete]
+        isComplete:
+          type: boolean
+        homeworkQuestions:
+          type: array
+          items:
+            type: string
+        summary:
+          type: ["string", "null"]
+
+    ChatMessage:
+      type: object
+      required: [role, content, timestamp]
+      properties:
+        role:
+          type: string
+          enum: [user, assistant]
+        content:
+          type: string
+        timestamp:
+          type: string
+
+    BuilderSkillsInput:
+      type: object
+      required: [skills]
+      properties:
+        skills:
+          type: array
+          items:
+            type: string
+          minItems: 1
+
+    BuilderChallenge:
+      type: object
+      required: [challengeId, skill, prompt]
+      properties:
+        challengeId:
+          type: string
+        skill:
+          type: string
+        prompt:
+          type: string
+
+    BuilderChallengeInput:
+      type: object
+      required: [challengeId, answer]
+      properties:
+        challengeId:
+          type: string
+        answer:
+          type: string
+
+    BuilderChallengeResult:
+      type: object
+      required: [passed, feedback]
+      properties:
+        passed:
+          type: boolean
+        feedback:
+          type: string
+
+    Post:
+      type: object
+      required: [id, authorId, content, createdAt, author]
+      properties:
+        id:
+          type: string
+        authorId:
+          type: string
+        content:
+          type: string
+        imageUrl:
+          type: ["string", "null"]
+        linkUrl:
+          type: ["string", "null"]
+        linkTitle:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        author:
+          $ref: "#/components/schemas/UserProfile"
+
+    PostInput:
+      type: object
+      required: [content]
+      properties:
+        content:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        imageUrl:
+          type: string
+        linkUrl:
+          type: string
+        linkTitle:
+          type: string
+
+    PostPage:
+      type: object
+      required: [posts, nextCursor]
+      properties:
+        posts:
+          type: array
+          items:
+            $ref: "#/components/schemas/Post"
+        nextCursor:
+          type: ["string", "null"]
+
+    FollowStatus:
+      type: object
+      required: [isFollowing]
+      properties:
+        isFollowing:
+          type: boolean

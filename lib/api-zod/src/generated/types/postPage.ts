@@ -5,7 +5,10 @@
  * Wozzer social network API
  * OpenAPI spec version: 0.1.0
  */
+import type { Post } from './post';
 
-export interface HealthStatus {
-  status: string;
+export interface PostPage {
+  posts: Post[];
+  /** @nullable */
+  nextCursor: string | null;
 }
