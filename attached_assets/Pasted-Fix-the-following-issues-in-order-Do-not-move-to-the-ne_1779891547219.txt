@@ -1,0 +1,154 @@
+Fix the following issues in order. Do not move to the next fix until the current one is confirmed working.
+1. Fix TypeScript Errors (Render deployment is failing)
+Run pnpm --filter @workspace/api-server run typecheck and fix every single TypeScript error until it exits with code 0. Common issues to look for:
+
+Missing type annotations
+Implicit any types
+Missing return types on functions
+Incorrect import types
+Unresolved module types
+
+After fixing, run the full typecheck: pnpm run typecheck from root. It must pass completely before moving on. Then commit and push to GitHub.
+2. Gamification System — Core Architecture
+Add a complete gamification layer to the database schema and backend. This is central to the product, not an addon.
+Database additions (add to Drizzle schema):
+users table additions:
+- level (integer, default 0)
+- xp (integer, default 0)
+- streak_current (integer, default 0)
+- streak_longest (integer, default 0)
+- streak_last_active (date, nullable)
+- visibility_score (float, default 0.0)
+Create a new achievements table:
+- id
+- user_id (foreign key)
+- achievement_type (enum: first_post, first_match, first_project, streak_7, streak_30, streak_100, level_up, challenge_complete, interview_complete, collaboration_complete)
+- earned_at (timestamp)
+Create a new level_requirements table or hardcode in backend logic:
+Level 0 — signed up, nothing done
+Level 1 — completed AI onboarding interview OR first technical challenge
+Level 2 — submitted first project link
+Level 3 — completed a technical challenge (Wozniaks) or homework (Visionaries)
+Level 4 — first mutual swipe / connection
+Level 5 — collaborated and shipped something with another user
+Level 6+ — reserved for future, combination of streaks + challenges + activity
+XP system:
++10 XP — daily login
++25 XP — posting something
++50 XP — completing a challenge
++75 XP — completing onboarding interview
++100 XP — first mutual swipe
++200 XP — submitting a completed project
++500 XP — completing a collaboration sprint
+Level thresholds:
+Level 1: 75 XP
+Level 2: 200 XP
+Level 3: 400 XP
+Level 4: 700 XP
+Level 5: 1200 XP
+Level 6+: every 1000 XP thereafter
+3. Streak System
+Add streak logic to the backend:
+
+Every time a user performs any of these actions, call updateStreak(userId):
+
+Posts something
+Completes a challenge
+Swipes and engages
+Submits a project update
+Finishes a certification module
+
+
+updateStreak logic:
+
+If last active was yesterday → increment streak by 1
+If last active was today → do nothing (already counted)
+If last active was 2+ days ago → reset streak to 1
+Update streak_last_active to today
+If new streak > streak_longest → update streak_longest
+
+
+
+Streak badges:
+7 days → "On a roll" badge (flame icon)
+30 days → "Consistent builder" badge (larger flame)
+100 days → "Legend" badge (special animated indicator on profile and swipe card)
+4. Visibility Score System
+Add a visibility_score calculation that determines how often a user's card appears in other people's swipe decks.
+Score is calculated from:
+- Level (weight: 40%)
+- Current streak (weight: 30%)
+- Activity in last 7 days: posts + swipes + projects (weight: 20%)
+- Profile completeness: bio + project links + skills filled (weight: 10%)
+Recalculate visibility_score every time any of those inputs change.
+When serving swipe deck cards, order by visibility_score DESC with some randomness injected (±20% shuffle) so it doesn't feel robotic.
+Level 0 users with no activity get significantly deprioritised in the deck — they appear rarely. Not invisible, just rare.
+5. Update Swipe Deck UI
+Each swipe card must now show:
+Person card:
+
+Username
+Role badge (Visionary or Wozniak) — sticker style
+Level badge (Level 0-6+) — chunky, high contrast
+Current streak with flame icon (only show if streak > 2)
+2-3 skill or interest tags
+One line bio
+
+Project card:
+
+Project name and one line description
+Stack/category tags
+Builder's username
+Builder's level badge
+Builder's streak if notable
+
+Card deck ratio remains 3 person cards : 1 project card.
+Level 0 cards should look visibly less complete — greyed out badge, no streak indicator, feels like an empty scrapbook page waiting to be filled. Not ugly, just clearly incomplete.
+6. Profile Page Updates
+Profile must now display:
+
+Level badge (large, prominent)
+Current streak with flame icon
+Longest streak ever
+XP progress bar showing progress to next level
+Achievements section showing earned badges
+Visibility indicator (private to user only) showing how often their card is being served
+
+7. Onboarding Flow Update
+Remove the hard gate. Nobody gets rejected.
+New onboarding flow:
+
+User signs up → immediately in the app at Level 0
+Shown a clean onboarding prompt: "Your profile is empty. Complete your interview or first challenge to start showing up in people's decks."
+Two clear buttons: "I have an idea (Visionary)" or "I can build things (Wozniak)"
+Completing either grants Level 1 and first XP dump
+If they skip → they stay Level 0, can browse but their card rarely appears
+Skipping is allowed but the UI makes clear what they're missing
+
+The AI interview tone for Visionaries should be like a blunt senior founder texting. Short messages. Direct questions. No corporate language. If their idea is weak, AI says so directly and gives them specific homework — but doesn't block them, just tells them their visibility will be low until they improve it.
+The Wozniak challenge should be a practical problem relevant to their chosen skills. Not trick questions. Real problems a builder would actually face.
+8. Certification Modules (Scaffold Only)
+Add a /certifications route and page. For now it's a placeholder but structure it properly:
+Certifications page shows:
+- Available certification tracks (e.g. JavaScript, Python, UI Design, Product Thinking)
+- Each track has levels: Beginner → Intermediate → Advanced
+- Completing a track awards XP and a verified badge on profile
+- Badge shows on swipe cards
+- Currently locked with "Coming soon" on all tracks except one demo track
+Build one demo certification track with 3 questions to show the mechanic works end to end. Award XP on completion.
+9. Design Updates
+Maintain the scrapbook aesthetic throughout all new UI. Specific additions:
+
+Level badges: look like physical stickers — slightly rounded rectangle, bold number, role color coded (Visionary = deep blue, Wozniak = orange-red)
+Streak flame: use an actual flame emoji or SVG, animate it subtly on profile (gentle pulse, CSS only)
+XP progress bar: looks like a hand-drawn progress bar, slightly irregular edges, fills with accent color
+Achievement badges: look like scout badges or stickers, each has a small icon and label
+Level 0 state: cards have a dashed ink border instead of solid, slightly faded, feels like a blank scrapbook page
+
+All new pages must be mobile first, 390px base width.
+10. After all changes:
+
+Run pnpm run typecheck — must pass with zero errors
+Run pnpm run build — must complete successfully
+Commit everything with message "feat: gamification, streaks, visibility scoring, onboarding rework"
+Push to GitHub
