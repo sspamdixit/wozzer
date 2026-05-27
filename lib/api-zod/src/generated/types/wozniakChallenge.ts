@@ -6,7 +6,8 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface BuilderChallengeInput {
+export interface WozniakChallenge {
   challengeId: string;
-  answer: string;
+  skill: string;
+  prompt: string;
 }

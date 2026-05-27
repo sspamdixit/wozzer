@@ -6,6 +6,7 @@ import usersRouter from "./users";
 import postsRouter from "./posts";
 import followsRouter from "./follows";
 import feedRouter from "./feed";
+import discoverRouter from "./discover";
 
 const router: IRouter = Router();
 
@@ -16,5 +17,6 @@ router.use(usersRouter);
 router.use(postsRouter);
 router.use(followsRouter);
 router.use(feedRouter);
+router.use(discoverRouter);
 
 export default router;

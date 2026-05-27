@@ -14,5 +14,5 @@ export type UserRole = typeof UserRole[keyof typeof UserRole] | null;
 
 export const UserRole = {
   visionary: 'visionary',
-  builder: 'builder',
+  wozniak: 'wozniak',
 } as const;

@@ -1,50 +1,46 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   useStartOnboarding,
   useOnboardingChat,
   useCompleteOnboarding,
-  useSubmitBuilderSkills,
-  useSubmitBuilderChallenge,
+  useSubmitWozniakSkills,
+  useSubmitWozniakChallenge,
   OnboardingState,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Loader2, Send } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 
 export default function Onboarding() {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const [, setLocation] = useLocation();
-  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const [state, setState] = useState<OnboardingState | null>(null);
   const [chatInput, setChatInput] = useState("");
+  const [selectedPath, setSelectedPath] = useState<"visionary" | "wozniak" | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const startOnboarding = useStartOnboarding();
   const chatMutation = useOnboardingChat();
   const completeMutation = useCompleteOnboarding();
-  const submitSkills = useSubmitBuilderSkills();
-  const submitChallenge = useSubmitBuilderChallenge();
+  const submitSkills = useSubmitWozniakSkills();
+  const submitChallenge = useSubmitWozniakChallenge();
 
-  const [builderSkills, setBuilderSkills] = useState<string[]>([]);
-  const [challengePrompt, setChallengePrompt] = useState<{ id: string; text: string } | null>(null);
+  const [wozniakSkills, setWozniakSkills] = useState<string[]>([]);
+  const [challenge, setChallenge] = useState<{ id: string; text: string } | null>(null);
   const [challengeAnswer, setChallengeAnswer] = useState("");
+  const [levelResult, setLevelResult] = useState<{ level: string; feedback: string } | null>(null);
+  const [error, setError] = useState("");
 
   const PRESET_SKILLS = [
-    "React", "Node.js", "Python", "Rust", "Go",
-    "Machine Learning", "iOS", "Android", "Hardware", "UI/UX Design"
+    "React", "Node.js", "Python", "Rust", "Go", "Swift",
+    "Machine Learning", "iOS", "Android", "Hardware", "UI/UX Design", "C++", "Game Dev",
   ];
 
   useEffect(() => {
-    if (user?.onboardingComplete) {
-      setLocation("/feed");
-    }
+    if (user?.onboardingComplete) setLocation("/feed");
   }, [user, setLocation]);
 
   useEffect(() => {
@@ -53,96 +49,203 @@ export default function Onboarding() {
     }
   }, [state?.messages]);
 
-  const handleStartPath = async (path: "visionary" | "builder") => {
-    try {
-      const res = await startOnboarding.mutateAsync({ data: { path } });
-      setState(res);
-    } catch (e: any) {
-      toast({ title: "Error", description: e.message, variant: "destructive" });
+  const handleStartPath = async (path: "visionary" | "wozniak") => {
+    setSelectedPath(path);
+    if (path === "visionary") {
+      try {
+        const res = await startOnboarding.mutateAsync({ data: { path } });
+        setState(res);
+      } catch (e: any) {
+        setError(e.message);
+      }
     }
   };
 
   const handleChatSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!chatInput.trim() || chatMutation.isPending) return;
-
     const msg = chatInput;
     setChatInput("");
-
     setState(prev => prev ? {
       ...prev,
       messages: [...prev.messages, { role: "user", content: msg, timestamp: new Date().toISOString() }]
     } : prev);
-
     try {
       const res = await chatMutation.mutateAsync({ data: { message: msg } });
       setState(res);
+      if (res.phase === "complete") {
+        await completeMutation.mutateAsync({ data: { summary: res.summary || "Visionary approved" } });
+        queryClient.invalidateQueries();
+        refreshUser();
+        setTimeout(() => setLocation("/feed"), 1200);
+      }
     } catch (e: any) {
-      toast({ title: "Error sending message", description: e.message, variant: "destructive" });
+      setError(e.message);
     }
   };
 
-  const handleCompleteVisionary = async () => {
+  const handleCompleteHomework = async () => {
     try {
       await completeMutation.mutateAsync({ data: { summary: state?.summary || "" } });
       queryClient.invalidateQueries();
+      refreshUser();
       setLocation("/feed");
     } catch (e: any) {
-      toast({ title: "Error", description: e.message, variant: "destructive" });
+      setError(e.message);
     }
   };
 
-  const handleBuilderSkillsSubmit = async () => {
-    if (builderSkills.length === 0) return;
+  const handleWozniakSkillsSubmit = async () => {
+    if (wozniakSkills.length === 0) return;
     try {
-      const res = await submitSkills.mutateAsync({ data: { skills: builderSkills } });
-      setChallengePrompt({ id: res.challengeId, text: res.prompt });
+      const res = await submitSkills.mutateAsync({ data: { skills: wozniakSkills } });
+      setChallenge({ id: res.challengeId, text: res.prompt });
     } catch (e: any) {
-      toast({ title: "Error", description: e.message, variant: "destructive" });
+      setError(e.message);
     }
   };
 
-  const handleBuilderChallengeSubmit = async () => {
-    if (!challengeAnswer.trim() || !challengePrompt) return;
+  const handleChallengeSubmit = async () => {
+    if (!challengeAnswer.trim() || !challenge) return;
     try {
       const res = await submitChallenge.mutateAsync({
-        data: { challengeId: challengePrompt.id, answer: challengeAnswer }
+        data: { challengeId: challenge.id, answer: challengeAnswer }
       });
-      if (res.passed) {
-        toast({ title: "Passed!", description: res.feedback });
-        await completeMutation.mutateAsync({ data: { summary: "Builder verified" } });
-        queryClient.invalidateQueries();
-        setLocation("/feed");
-      } else {
-        toast({ title: "Keep trying", description: res.feedback, variant: "destructive" });
-      }
+      setLevelResult(res);
+      queryClient.invalidateQueries();
+      refreshUser();
+      setTimeout(() => setLocation("/feed"), 2000);
     } catch (e: any) {
-      toast({ title: "Error", description: e.message, variant: "destructive" });
+      setError(e.message);
     }
   };
 
-  if (!state && !challengePrompt) {
+  const inputStyle: React.CSSProperties = {
+    flex: 1,
+    padding: "10px 14px",
+    background: "#EDE8DE",
+    border: "1.5px solid #1A1A1A",
+    borderRadius: "2px",
+    fontFamily: "'Inter', sans-serif",
+    fontSize: "0.9rem",
+    color: "#1A1A1A",
+    outline: "none",
+  };
+
+  // Path selection
+  if (!selectedPath) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
-        <div className="max-w-2xl w-full text-center space-y-8">
-          <h1 className="text-3xl font-bold">Choose your path</h1>
-          <p className="text-muted-foreground">Wozzer is a network for both ideas and execution. How do you identify?</p>
-          <div className="grid md:grid-cols-2 gap-6">
+      <div className="min-h-screen flex flex-col items-center justify-center p-6" style={{ background: "#F5F0E8" }}>
+        <div style={{ maxWidth: 480, width: "100%" }}>
+          <div className="washi washi-top washi-yellow" style={{ position: "relative", left: "50%", transform: "translateX(-50%) rotate(-2deg)", width: 90, marginBottom: -9 }} />
+          <div className="scrap-card p-8 mb-6" style={{ transform: "rotate(-0.5deg)" }}>
+            <h1 className="font-serif" style={{ fontSize: "2rem", fontWeight: 700, marginBottom: 8, color: "#1A1A1A" }}>
+              Who are you?
+            </h1>
+            <p className="font-accent" style={{ color: "#6B6355", fontSize: "1rem", marginBottom: "1.5rem" }}>
+              Choose your path to earn a spot on Wozzer.
+            </p>
+
+            {error && <p style={{ color: "#CC2200", marginBottom: "1rem", fontFamily: "'Caveat', cursive" }}>{error}</p>}
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <button
+                onClick={() => handleStartPath("visionary")}
+                disabled={startOnboarding.isPending}
+                style={{
+                  background: "#F5E6D0",
+                  border: "2px solid #1A1A1A",
+                  boxShadow: "3px 3px 0 #1A1A1A",
+                  borderRadius: "2px",
+                  padding: "1.25rem",
+                  textAlign: "left",
+                  cursor: "pointer",
+                  transform: "rotate(-1deg)",
+                }}
+              >
+                <div className="font-serif" style={{ fontSize: "1.4rem", fontWeight: 700, color: "#7B4F2E", marginBottom: 4 }}>
+                  Visionary
+                </div>
+                <div style={{ fontSize: "0.85rem", color: "#6B6355", fontFamily: "'Inter', sans-serif", lineHeight: 1.5 }}>
+                  You have the idea. Defend it against the AI inquisitor. Come with something real.
+                </div>
+              </button>
+
+              <button
+                onClick={() => handleStartPath("wozniak")}
+                disabled={startOnboarding.isPending}
+                style={{
+                  background: "#D8F0E0",
+                  border: "2px solid #1A1A1A",
+                  boxShadow: "3px 3px 0 #1A1A1A",
+                  borderRadius: "2px",
+                  padding: "1.25rem",
+                  textAlign: "left",
+                  cursor: "pointer",
+                  transform: "rotate(1deg)",
+                }}
+              >
+                <div className="font-serif" style={{ fontSize: "1.4rem", fontWeight: 700, color: "#1A6B3A", marginBottom: 4 }}>
+                  Wozniak
+                </div>
+                <div style={{ fontSize: "0.85rem", color: "#6B6355", fontFamily: "'Inter', sans-serif", lineHeight: 1.5 }}>
+                  You build things. Pick your skills, solve a challenge, get your level — Beginner, Intermediate, or Advanced.
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Wozniak — skill selection
+  if (selectedPath === "wozniak" && !challenge && !levelResult) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-6" style={{ background: "#F5F0E8" }}>
+        <div style={{ maxWidth: 480, width: "100%" }}>
+          <div className="scrap-card p-8" style={{ transform: "rotate(0.8deg)" }}>
+            <div className="washi washi-top washi-green" style={{ width: 80, transform: "translateX(-50%) rotate(3deg)" }} />
+            <h2 className="font-serif mt-4" style={{ fontSize: "1.6rem", fontWeight: 700, color: "#1A1A1A", marginBottom: 6 }}>
+              What do you build?
+            </h2>
+            <p className="font-accent" style={{ color: "#6B6355", marginBottom: "1.25rem", fontSize: "1rem" }}>
+              Pick your skills. We'll test one of them.
+            </p>
+
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "1.5rem" }}>
+              {PRESET_SKILLS.map(skill => (
+                <button
+                  key={skill}
+                  onClick={() => setWozniakSkills(prev =>
+                    prev.includes(skill) ? prev.filter(s => s !== skill) : [...prev, skill]
+                  )}
+                  className="font-accent"
+                  style={{
+                    fontSize: "1rem",
+                    padding: "4px 12px",
+                    border: "1.5px solid " + (wozniakSkills.includes(skill) ? "#1A1A1A" : "#C8BFA8"),
+                    background: wozniakSkills.includes(skill) ? "#1A1A1A" : "transparent",
+                    color: wozniakSkills.includes(skill) ? "#F5F0E8" : "#6B6355",
+                    borderRadius: "2px",
+                    cursor: "pointer",
+                    transition: "all 0.15s",
+                  }}
+                >
+                  {skill}
+                </button>
+              ))}
+            </div>
+
+            {error && <p style={{ color: "#CC2200", marginBottom: "1rem", fontFamily: "'Caveat', cursive" }}>{error}</p>}
+
             <button
-              onClick={() => handleStartPath("visionary")}
-              className="bg-card border border-border rounded-xl p-8 text-left hover:border-amber-500/50 hover:bg-amber-500/5 transition-all group"
-              disabled={startOnboarding.isPending}
+              onClick={handleWozniakSkillsSubmit}
+              disabled={wozniakSkills.length === 0 || submitSkills.isPending}
+              className="btn-primary"
+              style={{ width: "100%", opacity: wozniakSkills.length === 0 ? 0.5 : 1 }}
             >
-              <h2 className="text-2xl font-bold text-amber-500 mb-2">Visionary</h2>
-              <p className="text-muted-foreground group-hover:text-foreground transition-colors">You have the ideas. You see the future. Be prepared to defend your vision against our AI inquisitor.</p>
-            </button>
-            <button
-              onClick={() => handleStartPath("builder")}
-              className="bg-card border border-border rounded-xl p-8 text-left hover:border-cyan-500/50 hover:bg-cyan-500/5 transition-all group"
-              disabled={startOnboarding.isPending}
-            >
-              <h2 className="text-2xl font-bold text-cyan-500 mb-2">Builder</h2>
-              <p className="text-muted-foreground group-hover:text-foreground transition-colors">You build the things. You write code, design, or assemble. Prove your skills to enter.</p>
+              {submitSkills.isPending ? "Generating challenge..." : "Get my challenge"}
             </button>
           </div>
         </div>
@@ -150,122 +253,199 @@ export default function Onboarding() {
     );
   }
 
+  // Wozniak — challenge
+  if (challenge && !levelResult) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-6" style={{ background: "#F5F0E8" }}>
+        <div style={{ maxWidth: 520, width: "100%" }}>
+          <div className="scrap-card p-8" style={{ transform: "rotate(-0.7deg)" }}>
+            <div className="washi washi-top washi-orange" style={{ width: 80 }} />
+            <h2 className="font-serif mt-4" style={{ fontSize: "1.6rem", fontWeight: 700, color: "#1A1A1A", marginBottom: 8 }}>
+              The Challenge
+            </h2>
+            <div
+              style={{
+                background: "#EDE8DE",
+                border: "1.5px solid #1A1A1A",
+                borderRadius: "2px",
+                padding: "1rem",
+                fontFamily: "'Inter', monospace",
+                fontSize: "0.88rem",
+                lineHeight: 1.7,
+                marginBottom: "1.25rem",
+                whiteSpace: "pre-wrap",
+              }}
+            >
+              {challenge.text}
+            </div>
+            <textarea
+              style={{
+                width: "100%",
+                minHeight: "160px",
+                background: "#F5F0E8",
+                border: "1.5px solid #1A1A1A",
+                borderRadius: "2px",
+                padding: "10px 12px",
+                fontFamily: "'Inter', monospace",
+                fontSize: "0.88rem",
+                color: "#1A1A1A",
+                outline: "none",
+                resize: "vertical",
+                marginBottom: "1rem",
+                boxSizing: "border-box",
+              }}
+              placeholder="Your answer..."
+              value={challengeAnswer}
+              onChange={e => setChallengeAnswer(e.target.value)}
+            />
+            {error && <p style={{ color: "#CC2200", marginBottom: "1rem", fontFamily: "'Caveat', cursive" }}>{error}</p>}
+            <button
+              onClick={handleChallengeSubmit}
+              disabled={!challengeAnswer.trim() || submitChallenge.isPending}
+              className="btn-primary"
+              style={{ width: "100%", opacity: !challengeAnswer.trim() ? 0.5 : 1 }}
+            >
+              {submitChallenge.isPending ? "Evaluating..." : "Submit"}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Wozniak — result
+  if (levelResult) {
+    const levelColors: Record<string, string> = {
+      beginner: "#D8F0E0",
+      intermediate: "#F5E6D0",
+      advanced: "#F0D8D8",
+    };
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-6" style={{ background: "#F5F0E8" }}>
+        <div style={{ maxWidth: 420, width: "100%" }}>
+          <div
+            className="scrap-card p-8 text-center"
+            style={{ transform: "rotate(-0.5deg)", background: levelColors[levelResult.level] || "#FDFAF4" }}
+          >
+            <div className="washi washi-top washi-green" style={{ width: 100 }} />
+            <p className="font-accent mt-4" style={{ color: "#6B6355", fontSize: "1rem" }}>You're a</p>
+            <h2 className="font-serif" style={{ fontSize: "2.2rem", fontWeight: 700, color: "#1A1A1A", textTransform: "capitalize" }}>
+              {levelResult.level} Wozniak
+            </h2>
+            <p style={{ color: "#6B6355", fontSize: "0.9rem", margin: "1rem 0 1.5rem", fontFamily: "'Inter', sans-serif", lineHeight: 1.6 }}>
+              {levelResult.feedback}
+            </p>
+            <p className="font-accent" style={{ color: "#E8450A", fontSize: "1rem" }}>Entering Wozzer...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Visionary — chat interview
   if (state?.phase === "interview") {
     return (
-      <div className="min-h-screen bg-background flex flex-col max-w-3xl mx-auto p-4 md:p-8">
-        <h2 className="text-2xl font-bold text-amber-500 mb-6">The Inquisition</h2>
-        <div className="flex-1 bg-card border border-border rounded-xl flex flex-col overflow-hidden mb-6">
-          <ScrollArea className="flex-1 p-4" ref={scrollRef}>
-            <div className="space-y-6">
-              {state.messages.map((m, i) => (
-                <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-                  <div className={`max-w-[80%] rounded-xl p-4 ${m.role === "user" ? "bg-amber-500 text-amber-950 font-medium" : "bg-secondary text-foreground"}`}>
-                    <div className="whitespace-pre-wrap">{m.content}</div>
-                  </div>
-                </div>
-              ))}
-              {chatMutation.isPending && (
-                <div className="flex justify-start">
-                  <div className="bg-secondary rounded-xl p-4 flex items-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                    <span className="text-muted-foreground">Thinking...</span>
-                  </div>
-                </div>
+      <div
+        className="min-h-screen flex flex-col max-w-2xl mx-auto"
+        style={{ background: "#F5F0E8" }}
+      >
+        <div
+          className="px-4 py-3 flex items-center gap-3 sticky top-0 z-10"
+          style={{ background: "#F5F0E8", borderBottom: "2px solid #1A1A1A" }}
+        >
+          <div className="font-accent" style={{ color: "#7B4F2E", fontSize: "1.1rem", fontWeight: 600 }}>
+            The Inquisition
+          </div>
+          <span className="font-accent" style={{ color: "#6B6355", fontSize: "0.9rem", marginLeft: "auto" }}>
+            Visionary path
+          </span>
+        </div>
+
+        <div
+          ref={scrollRef}
+          className="flex-1 overflow-y-auto p-4"
+          style={{ display: "flex", flexDirection: "column", gap: "12px" }}
+        >
+          {state.messages.map((m, i) => (
+            <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+              {m.role === "user" ? (
+                <div className="chat-bubble-user">{m.content}</div>
+              ) : (
+                <div className="chat-bubble-ai" style={{ whiteSpace: "pre-wrap" }}>{m.content}</div>
               )}
             </div>
-          </ScrollArea>
-          <div className="p-4 border-t border-border bg-background">
-            <form onSubmit={handleChatSubmit} className="flex gap-2">
-              <Input
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                placeholder="Defend your idea..."
-                className="flex-1"
-                disabled={chatMutation.isPending}
-              />
-              <Button type="submit" disabled={!chatInput.trim() || chatMutation.isPending}>
-                <Send className="h-4 w-4" />
-              </Button>
-            </form>
-          </div>
+          ))}
+          {chatMutation.isPending && (
+            <div className="flex justify-start">
+              <div className="chat-bubble-ai flex items-center gap-2">
+                <Loader2 size={14} className="animate-spin" />
+                <span style={{ color: "#6B6355" }}>thinking...</span>
+              </div>
+            </div>
+          )}
         </div>
+
+        <form
+          onSubmit={handleChatSubmit}
+          className="flex gap-2 p-4"
+          style={{ borderTop: "2px solid #1A1A1A", background: "#F5F0E8" }}
+        >
+          <input
+            value={chatInput}
+            onChange={e => setChatInput(e.target.value)}
+            placeholder="Defend your idea..."
+            disabled={chatMutation.isPending}
+            style={inputStyle}
+          />
+          <button
+            type="submit"
+            disabled={!chatInput.trim() || chatMutation.isPending}
+            style={{
+              background: "#E8450A",
+              border: "1.5px solid #1A1A1A",
+              borderRadius: "2px",
+              padding: "0 16px",
+              cursor: "pointer",
+              color: "#FDFAF4",
+              boxShadow: "2px 2px 0 #1A1A1A",
+            }}
+          >
+            <Send size={16} />
+          </button>
+        </form>
       </div>
     );
   }
 
+  // Visionary — homework
   if (state?.phase === "homework") {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
-        <div className="max-w-2xl w-full bg-card border border-border rounded-xl p-8 shadow-xl">
-          <h2 className="text-2xl font-bold text-amber-500 mb-6">Homework</h2>
-          <p className="mb-6 text-foreground text-lg">Your idea has potential, but it needs work. Before you can proceed, consider these questions:</p>
-          <ul className="list-disc pl-6 space-y-4 mb-8 text-muted-foreground">
-            {state.homeworkQuestions?.map((q, i) => (
-              <li key={i}>{q}</li>
-            ))}
-          </ul>
-          <Button onClick={handleCompleteVisionary} className="w-full text-lg h-12" disabled={completeMutation.isPending}>
-            {completeMutation.isPending ? "Entering..." : "I'll do this"}
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  if (state && !challengePrompt) {
-    return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
-        <div className="max-w-2xl w-full bg-card border border-border rounded-xl p-8 shadow-xl">
-          <h2 className="text-2xl font-bold text-cyan-500 mb-6">Select your stack</h2>
-          <p className="mb-6 text-muted-foreground">Choose your primary skills. We will test one.</p>
-          <div className="flex flex-wrap gap-2 mb-8">
-            {PRESET_SKILLS.map(skill => (
-              <button
-                key={skill}
-                onClick={() => {
-                  setBuilderSkills(prev =>
-                    prev.includes(skill) ? prev.filter(s => s !== skill) : [...prev, skill]
-                  );
-                }}
-                className={`px-4 py-2 rounded-full border transition-colors ${builderSkills.includes(skill) ? "bg-cyan-500/20 border-cyan-500 text-cyan-500" : "bg-transparent border-border text-muted-foreground hover:border-cyan-500/50"}`}
-              >
-                {skill}
-              </button>
-            ))}
+      <div className="min-h-screen flex flex-col items-center justify-center p-6" style={{ background: "#F5F0E8" }}>
+        <div style={{ maxWidth: 480, width: "100%" }}>
+          <div className="scrap-card p-8" style={{ transform: "rotate(-1deg)" }}>
+            <div className="washi washi-top washi-yellow" style={{ width: 90 }} />
+            <h2 className="font-serif mt-4" style={{ fontSize: "1.6rem", fontWeight: 700, color: "#1A1A1A", marginBottom: 8 }}>
+              Homework assigned
+            </h2>
+            <p style={{ color: "#6B6355", fontSize: "0.9rem", fontFamily: "'Inter', sans-serif", lineHeight: 1.6, marginBottom: "1.25rem" }}>
+              Your idea has potential but needs more thought. Come back when you've worked through these:
+            </p>
+            <ol style={{ paddingLeft: "1.2rem", display: "flex", flexDirection: "column", gap: "10px", marginBottom: "1.5rem" }}>
+              {state.homeworkQuestions?.map((q, i) => (
+                <li key={i} style={{ color: "#1A1A1A", fontSize: "0.9rem", fontFamily: "'Inter', sans-serif", lineHeight: 1.6 }}>
+                  {q}
+                </li>
+              ))}
+            </ol>
+            <button
+              onClick={handleCompleteHomework}
+              disabled={completeMutation.isPending}
+              className="btn-primary"
+              style={{ width: "100%" }}
+            >
+              {completeMutation.isPending ? "..." : "I've thought it through"}
+            </button>
           </div>
-          <Button
-            onClick={handleBuilderSkillsSubmit}
-            className="w-full"
-            disabled={builderSkills.length === 0 || submitSkills.isPending}
-          >
-            {submitSkills.isPending ? "Generating challenge..." : "Submit Skills"}
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  if (challengePrompt) {
-    return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
-        <div className="max-w-2xl w-full bg-card border border-border rounded-xl p-8 shadow-xl">
-          <h2 className="text-2xl font-bold text-cyan-500 mb-6">The Challenge</h2>
-          <div className="bg-secondary/50 p-6 rounded-xl mb-6 font-mono text-sm leading-relaxed border border-border">
-            {challengePrompt.text}
-          </div>
-          <textarea
-            className="w-full min-h-[200px] bg-background border border-border rounded-xl p-4 mb-6 font-mono focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-cyan-500"
-            placeholder="Write your solution here..."
-            value={challengeAnswer}
-            onChange={(e) => setChallengeAnswer(e.target.value)}
-          />
-          <Button
-            onClick={handleBuilderChallengeSubmit}
-            className="w-full"
-            disabled={!challengeAnswer.trim() || submitChallenge.isPending}
-          >
-            {submitChallenge.isPending ? "Evaluating..." : "Submit Solution"}
-          </Button>
         </div>
       </div>
     );

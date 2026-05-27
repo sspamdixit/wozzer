@@ -1,50 +1,90 @@
 import { Post } from "@workspace/api-client-react";
 import { Link } from "wouter";
 import { formatDistanceToNow } from "date-fns";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { RoleBadge } from "./role-badge";
 
 export function PostCard({ post }: { post: Post }) {
   return (
-    <div className="p-4 md:p-6 border-b border-border bg-background hover:bg-secondary/20 transition-colors">
-      <div className="flex gap-4">
+    <div
+      style={{
+        borderBottom: "1.5px solid #C8BFA8",
+        padding: "1rem 1.25rem",
+        background: "#FDFAF4",
+      }}
+    >
+      <div style={{ display: "flex", gap: "12px" }}>
         <Link href={`/profile/${post.author.username}`}>
-          <Avatar className="h-10 w-10 border border-border cursor-pointer">
-            <AvatarImage src={post.author.avatarUrl || undefined} />
-            <AvatarFallback>{post.author.displayName.substring(0, 2).toUpperCase()}</AvatarFallback>
-          </Avatar>
+          <div
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: "50%",
+              border: "1.5px solid #1A1A1A",
+              background: post.author.avatarUrl ? undefined : "#C8BFA8",
+              backgroundImage: post.author.avatarUrl ? `url(${post.author.avatarUrl})` : undefined,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              flexShrink: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontFamily: "'Fraunces', serif",
+              fontWeight: 700,
+              color: "#6B6355",
+              cursor: "pointer",
+            }}
+          >
+            {!post.author.avatarUrl && post.author.displayName.charAt(0).toUpperCase()}
+          </div>
         </Link>
-        
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1 flex-wrap">
-            <Link href={`/profile/${post.author.username}`} className="font-semibold text-foreground hover:underline truncate">
+
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginBottom: "4px" }}>
+            <Link
+              href={`/profile/${post.author.username}`}
+              style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, color: "#1A1A1A", textDecoration: "none", fontSize: "0.95rem" }}
+            >
               {post.author.displayName}
             </Link>
-            <span className="text-muted-foreground text-sm truncate">@{post.author.username}</span>
-            <span className="text-muted-foreground text-sm">&middot;</span>
-            <span className="text-muted-foreground text-sm whitespace-nowrap">
+            <span className="font-accent" style={{ color: "#6B6355", fontSize: "0.85rem" }}>@{post.author.username}</span>
+            <span style={{ color: "#C8BFA8" }}>·</span>
+            <span className="font-accent" style={{ color: "#C8BFA8", fontSize: "0.85rem", whiteSpace: "nowrap" }}>
               {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
             </span>
           </div>
-          
-          <div className="mb-2">
-            <RoleBadge role={post.author.role} />
+
+          <div style={{ marginBottom: "6px" }}>
+            <RoleBadge role={post.author.role} level={post.author.level ?? undefined} />
           </div>
 
-          <p className="text-foreground whitespace-pre-wrap break-words leading-relaxed">
+          <p style={{ color: "#1A1A1A", whiteSpace: "pre-wrap", wordBreak: "break-word", lineHeight: 1.6, fontSize: "0.9rem", fontFamily: "'Inter', sans-serif" }}>
             {post.content}
           </p>
 
           {post.imageUrl && (
-            <div className="mt-3 rounded-lg overflow-hidden border border-border">
-              <img src={post.imageUrl} alt="Post attachment" className="w-full h-auto object-cover max-h-[400px]" />
+            <div style={{ marginTop: "10px", borderRadius: "2px", overflow: "hidden", border: "1.5px solid #C8BFA8" }}>
+              <img src={post.imageUrl} alt="Post" style={{ width: "100%", height: "auto", objectFit: "cover", maxHeight: 360 }} />
             </div>
           )}
 
           {post.linkUrl && (
-            <a href={post.linkUrl} target="_blank" rel="noopener noreferrer" className="block mt-3 p-3 rounded-lg border border-border hover:bg-secondary/50 transition-colors">
-              <div className="font-medium text-primary mb-1">{post.linkTitle || post.linkUrl}</div>
-              <div className="text-sm text-muted-foreground truncate">{post.linkUrl}</div>
+            <a
+              href={post.linkUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: "block",
+                marginTop: "10px",
+                padding: "10px 12px",
+                border: "1.5px solid #C8BFA8",
+                borderRadius: "2px",
+                background: "#EDE8DE",
+                textDecoration: "none",
+                boxShadow: "2px 2px 0 #C8BFA8",
+              }}
+            >
+              <div className="font-accent" style={{ color: "#E8450A", fontWeight: 600, marginBottom: 2 }}>{post.linkTitle || post.linkUrl}</div>
+              <div style={{ fontSize: "0.78rem", color: "#6B6355", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontFamily: "'Inter', sans-serif" }}>{post.linkUrl}</div>
             </a>
           )}
         </div>

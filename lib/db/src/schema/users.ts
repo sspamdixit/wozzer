@@ -4,15 +4,14 @@ import { z } from "zod/v4";
 
 export const usersTable = pgTable("users", {
   id: text("id").primaryKey(),
-  clerkId: text("clerk_id").unique(),
+  supabaseId: text("supabase_id").unique(),
   username: text("username").notNull().unique(),
   email: text("email").notNull().unique(),
-  passwordHash: text("password_hash"),
   displayName: text("display_name").notNull(),
   bio: text("bio"),
   avatarUrl: text("avatar_url"),
   role: text("role"),
-  level: integer("level"),
+  level: text("level"),
   skills: text("skills").array().notNull().default([]),
   projectLinks: text("project_links").array().notNull().default([]),
   onboardingComplete: boolean("onboarding_complete").notNull().default(false),

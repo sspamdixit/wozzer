@@ -21,6 +21,8 @@ tags:
     description: Follow system
   - name: feed
     description: Feed and suggestions
+  - name: discover
+    description: Swipe deck discovery
 
 paths:
   /healthz:
@@ -35,76 +37,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
-
-  # Auth
-  /auth/register:
-    post:
-      operationId: register
-      tags: [auth]
-      summary: Register a new user
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/RegisterInput"
-      responses:
-        "201":
-          description: Registered
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/AuthResponse"
-        "400":
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "409":
-          description: Username or email already taken
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
-  /auth/login:
-    post:
-      operationId: login
-      tags: [auth]
-      summary: Log in
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/LoginInput"
-      responses:
-        "200":
-          description: Logged in
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/AuthResponse"
-        "401":
-          description: Invalid credentials
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
-  /auth/logout:
-    post:
-      operationId: logout
-      tags: [auth]
-      summary: Log out
-      responses:
-        "200":
-          description: Logged out
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/SuccessResponse"
 
   /auth/me:
     get:
@@ -125,12 +57,37 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /auth/username:
+    post:
+      operationId: setUsername
+      tags: [auth]
+      summary: Set username for new OAuth user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetUsernameInput"
+      responses:
+        "200":
+          description: Username set
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "409":
+          description: Username taken
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   # Onboarding
   /onboarding/start:
     post:
       operationId: startOnboarding
       tags: [onboarding]
-      summary: Start onboarding — choose path (visionary or builder)
+      summary: Start onboarding — choose path (visionary or wozniak)
       requestBody:
         required: true
         content:
@@ -183,43 +140,76 @@ paths:
               schema:
                 $ref: "#/components/schemas/User"
 
-  /onboarding/builder/skills:
+  /onboarding/wozniak/skills:
     post:
-      operationId: submitBuilderSkills
+      operationId: submitWozniakSkills
       tags: [onboarding]
-      summary: Submit skills for builder path
+      summary: Submit skills for wozniak path
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/BuilderSkillsInput"
+              $ref: "#/components/schemas/WozniakSkillsInput"
       responses:
         "200":
-          description: Builder skill challenge returned
+          description: Technical challenge returned
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/BuilderChallenge"
+                $ref: "#/components/schemas/WozniakChallenge"
 
-  /onboarding/builder/challenge:
+  /onboarding/wozniak/challenge:
     post:
-      operationId: submitBuilderChallenge
+      operationId: submitWozniakChallenge
       tags: [onboarding]
-      summary: Submit builder challenge answer for verification
+      summary: Submit wozniak challenge answer for level assessment
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/BuilderChallengeInput"
+              $ref: "#/components/schemas/WozniakChallengeInput"
       responses:
         "200":
-          description: Challenge result
+          description: Challenge result with assigned level
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/BuilderChallengeResult"
+                $ref: "#/components/schemas/WozniakChallengeResult"
+
+  # Discover (swipe deck)
+  /discover:
+    get:
+      operationId: getDiscoverDeck
+      tags: [discover]
+      summary: Get a mixed deck of person + project cards for swiping
+      responses:
+        "200":
+          description: Card deck
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiscoverDeck"
+
+  /discover/swipe:
+    post:
+      operationId: recordSwipe
+      tags: [discover]
+      summary: Record a swipe action on a card
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SwipeInput"
+      responses:
+        "200":
+          description: Swipe recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
 
   # Users / Profiles
   /users/{username}:
@@ -401,7 +391,7 @@ paths:
     get:
       operationId: getSuggestedUsers
       tags: [feed]
-      summary: Get suggested users to follow based on onboarding profile match
+      summary: Get suggested users to follow
       responses:
         "200":
           description: Suggested users list
@@ -435,45 +425,18 @@ components:
         success:
           type: boolean
 
-    RegisterInput:
+    SetUsernameInput:
       type: object
-      required: [username, email, password, displayName]
+      required: [username]
       properties:
         username:
           type: string
           minLength: 3
           maxLength: 30
-        email:
-          type: string
-        password:
-          type: string
-          minLength: 8
-        displayName:
-          type: string
-          minLength: 1
-          maxLength: 60
-
-    LoginInput:
-      type: object
-      required: [email, password]
-      properties:
-        email:
-          type: string
-        password:
-          type: string
-
-    AuthResponse:
-      type: object
-      required: [user, token]
-      properties:
-        user:
-          $ref: "#/components/schemas/User"
-        token:
-          type: string
 
     User:
       type: object
-      required: [id, username, email, displayName, role, onboardingComplete, followersCount, followingCount, createdAt]
+      required: [id, username, email, displayName, role, level, onboardingComplete, followersCount, followingCount, createdAt]
       properties:
         id:
           type: string
@@ -489,9 +452,10 @@ components:
           type: ["string", "null"]
         role:
           type: ["string", "null"]
-          enum: [visionary, builder, null]
+          enum: [visionary, wozniak, null]
         level:
-          type: ["integer", "null"]
+          type: ["string", "null"]
+          enum: [beginner, intermediate, advanced, null]
         skills:
           type: array
           items:
@@ -511,7 +475,7 @@ components:
 
     UserProfile:
       type: object
-      required: [id, username, displayName, role, followersCount, followingCount, createdAt]
+      required: [id, username, displayName, role, level, followersCount, followingCount, createdAt]
       properties:
         id:
           type: string
@@ -525,9 +489,10 @@ components:
           type: ["string", "null"]
         role:
           type: ["string", "null"]
-          enum: [visionary, builder, null]
+          enum: [visionary, wozniak, null]
         level:
-          type: ["integer", "null"]
+          type: ["string", "null"]
+          enum: [beginner, intermediate, advanced, null]
         skills:
           type: array
           items:
@@ -563,7 +528,7 @@ components:
       properties:
         path:
           type: string
-          enum: [visionary, builder]
+          enum: [visionary, wozniak]
 
     OnboardingChatInput:
       type: object
@@ -613,7 +578,7 @@ components:
         timestamp:
           type: string
 
-    BuilderSkillsInput:
+    WozniakSkillsInput:
       type: object
       required: [skills]
       properties:
@@ -623,7 +588,7 @@ components:
             type: string
           minItems: 1
 
-    BuilderChallenge:
+    WozniakChallenge:
       type: object
       required: [challengeId, skill, prompt]
       properties:
@@ -634,7 +599,7 @@ components:
         prompt:
           type: string
 
-    BuilderChallengeInput:
+    WozniakChallengeInput:
       type: object
       required: [challengeId, answer]
       properties:
@@ -643,14 +608,74 @@ components:
         answer:
           type: string
 
-    BuilderChallengeResult:
+    WozniakChallengeResult:
       type: object
-      required: [passed, feedback]
+      required: [level, feedback]
       properties:
-        passed:
-          type: boolean
+        level:
+          type: string
+          enum: [beginner, intermediate, advanced]
         feedback:
           type: string
+
+    DiscoverCard:
+      type: object
+      required: [id, type]
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [person, project]
+        person:
+          $ref: "#/components/schemas/UserProfile"
+        project:
+          $ref: "#/components/schemas/ProjectCard"
+
+    ProjectCard:
+      type: object
+      required: [id, name, description, authorUsername, authorLevel]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        screenshotUrl:
+          type: ["string", "null"]
+        linkUrl:
+          type: ["string", "null"]
+        authorUsername:
+          type: string
+        authorLevel:
+          type: ["string", "null"]
+
+    DiscoverDeck:
+      type: object
+      required: [cards]
+      properties:
+        cards:
+          type: array
+          items:
+            $ref: "#/components/schemas/DiscoverCard"
+
+    SwipeInput:
+      type: object
+      required: [targetId, targetType, direction]
+      properties:
+        targetId:
+          type: string
+        targetType:
+          type: string
+          enum: [person, project]
+        direction:
+          type: string
+          enum: [left, right]
 
     Post:
       type: object

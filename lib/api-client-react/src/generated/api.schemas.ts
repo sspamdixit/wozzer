@@ -17,25 +17,12 @@ export interface SuccessResponse {
   success: boolean;
 }
 
-export interface RegisterInput {
+export interface SetUsernameInput {
   /**
      * @minLength 3
      * @maxLength 30
      */
   username: string;
-  email: string;
-  /** @minLength 8 */
-  password: string;
-  /**
-     * @minLength 1
-     * @maxLength 60
-     */
-  displayName: string;
-}
-
-export interface LoginInput {
-  email: string;
-  password: string;
 }
 
 /**
@@ -46,7 +33,19 @@ export type UserRole = typeof UserRole[keyof typeof UserRole] | null;
 
 export const UserRole = {
   visionary: 'visionary',
-  builder: 'builder',
+  wozniak: 'wozniak',
+} as const;
+
+/**
+ * @nullable
+ */
+export type UserLevel = typeof UserLevel[keyof typeof UserLevel] | null;
+
+
+export const UserLevel = {
+  beginner: 'beginner',
+  intermediate: 'intermediate',
+  advanced: 'advanced',
 } as const;
 
 export interface User {
@@ -61,18 +60,13 @@ export interface User {
   /** @nullable */
   role: UserRole;
   /** @nullable */
-  level?: number | null;
+  level: UserLevel;
   skills?: string[];
   projectLinks?: string[];
   onboardingComplete: boolean;
   followersCount: number;
   followingCount: number;
   createdAt: string;
-}
-
-export interface AuthResponse {
-  user: User;
-  token: string;
 }
 
 /**
@@ -83,7 +77,19 @@ export type UserProfileRole = typeof UserProfileRole[keyof typeof UserProfileRol
 
 export const UserProfileRole = {
   visionary: 'visionary',
-  builder: 'builder',
+  wozniak: 'wozniak',
+} as const;
+
+/**
+ * @nullable
+ */
+export type UserProfileLevel = typeof UserProfileLevel[keyof typeof UserProfileLevel] | null;
+
+
+export const UserProfileLevel = {
+  beginner: 'beginner',
+  intermediate: 'intermediate',
+  advanced: 'advanced',
 } as const;
 
 export interface UserProfile {
@@ -97,7 +103,7 @@ export interface UserProfile {
   /** @nullable */
   role: UserProfileRole;
   /** @nullable */
-  level?: number | null;
+  level: UserProfileLevel;
   skills?: string[];
   projectLinks?: string[];
   followersCount: number;
@@ -118,7 +124,7 @@ export type OnboardingStartInputPath = typeof OnboardingStartInputPath[keyof typ
 
 export const OnboardingStartInputPath = {
   visionary: 'visionary',
-  builder: 'builder',
+  wozniak: 'wozniak',
 } as const;
 
 export interface OnboardingStartInput {
@@ -166,25 +172,89 @@ export interface OnboardingState {
   summary?: string | null;
 }
 
-export interface BuilderSkillsInput {
+export interface WozniakSkillsInput {
   /** @minItems 1 */
   skills: string[];
 }
 
-export interface BuilderChallenge {
+export interface WozniakChallenge {
   challengeId: string;
   skill: string;
   prompt: string;
 }
 
-export interface BuilderChallengeInput {
+export interface WozniakChallengeInput {
   challengeId: string;
   answer: string;
 }
 
-export interface BuilderChallengeResult {
-  passed: boolean;
+export type WozniakChallengeResultLevel = typeof WozniakChallengeResultLevel[keyof typeof WozniakChallengeResultLevel];
+
+
+export const WozniakChallengeResultLevel = {
+  beginner: 'beginner',
+  intermediate: 'intermediate',
+  advanced: 'advanced',
+} as const;
+
+export interface WozniakChallengeResult {
+  level: WozniakChallengeResultLevel;
   feedback: string;
+}
+
+export type DiscoverCardType = typeof DiscoverCardType[keyof typeof DiscoverCardType];
+
+
+export const DiscoverCardType = {
+  person: 'person',
+  project: 'project',
+} as const;
+
+export interface ProjectCard {
+  id: string;
+  name: string;
+  description: string;
+  tags?: string[];
+  /** @nullable */
+  screenshotUrl?: string | null;
+  /** @nullable */
+  linkUrl?: string | null;
+  authorUsername: string;
+  /** @nullable */
+  authorLevel: string | null;
+}
+
+export interface DiscoverCard {
+  id: string;
+  type: DiscoverCardType;
+  person?: UserProfile;
+  project?: ProjectCard;
+}
+
+export interface DiscoverDeck {
+  cards: DiscoverCard[];
+}
+
+export type SwipeInputTargetType = typeof SwipeInputTargetType[keyof typeof SwipeInputTargetType];
+
+
+export const SwipeInputTargetType = {
+  person: 'person',
+  project: 'project',
+} as const;
+
+export type SwipeInputDirection = typeof SwipeInputDirection[keyof typeof SwipeInputDirection];
+
+
+export const SwipeInputDirection = {
+  left: 'left',
+  right: 'right',
+} as const;
+
+export interface SwipeInput {
+  targetId: string;
+  targetType: SwipeInputTargetType;
+  direction: SwipeInputDirection;
 }
 
 export interface Post {

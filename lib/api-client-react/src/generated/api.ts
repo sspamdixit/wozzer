@@ -20,16 +20,11 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
-  AuthResponse,
-  BuilderChallenge,
-  BuilderChallengeInput,
-  BuilderChallengeResult,
-  BuilderSkillsInput,
+  DiscoverDeck,
   ErrorResponse,
   FollowStatus,
   GetFeedParams,
   HealthStatus,
-  LoginInput,
   OnboardingChatInput,
   OnboardingCompleteInput,
   OnboardingStartInput,
@@ -38,10 +33,15 @@ import type {
   PostInput,
   PostPage,
   ProfileUpdate,
-  RegisterInput,
+  SetUsernameInput,
   SuccessResponse,
+  SwipeInput,
   User,
-  UserProfile
+  UserProfile,
+  WozniakChallenge,
+  WozniakChallengeInput,
+  WozniakChallengeResult,
+  WozniakSkillsInput
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -133,218 +133,6 @@ export function useHealthCheck<TData = Awaited<ReturnType<typeof healthCheck>>, 
 
 
 
-export const getRegisterUrl = () => {
-
-
-
-
-  return `/api/auth/register`
-}
-
-/**
- * @summary Register a new user
- */
-export const register = async (registerInput: RegisterInput, options?: RequestInit): Promise<AuthResponse> => {
-
-  return customFetch<AuthResponse>(getRegisterUrl(),
-  {
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      registerInput,)
-  }
-);}
-
-
-
-
-export const getRegisterMutationOptions = <TError = ErrorType<ErrorResponse>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof register>>, TError,{data: BodyType<RegisterInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof register>>, TError,{data: BodyType<RegisterInput>}, TContext> => {
-
-const mutationKey = ['register'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof register>>, {data: BodyType<RegisterInput>}> = (props) => {
-          const {data} = props ?? {};
-
-          return  register(data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type RegisterMutationResult = NonNullable<Awaited<ReturnType<typeof register>>>
-    export type RegisterMutationBody = BodyType<RegisterInput>
-    export type RegisterMutationError = ErrorType<ErrorResponse>
-
-    /**
- * @summary Register a new user
- */
-export const useRegister = <TError = ErrorType<ErrorResponse>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof register>>, TError,{data: BodyType<RegisterInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
-        Awaited<ReturnType<typeof register>>,
-        TError,
-        {data: BodyType<RegisterInput>},
-        TContext
-      > => {
-      return useMutation(getRegisterMutationOptions(options));
-    }
-
-export const getLoginUrl = () => {
-
-
-
-
-  return `/api/auth/login`
-}
-
-/**
- * @summary Log in
- */
-export const login = async (loginInput: LoginInput, options?: RequestInit): Promise<AuthResponse> => {
-
-  return customFetch<AuthResponse>(getLoginUrl(),
-  {
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      loginInput,)
-  }
-);}
-
-
-
-
-export const getLoginMutationOptions = <TError = ErrorType<ErrorResponse>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof login>>, TError,{data: BodyType<LoginInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof login>>, TError,{data: BodyType<LoginInput>}, TContext> => {
-
-const mutationKey = ['login'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof login>>, {data: BodyType<LoginInput>}> = (props) => {
-          const {data} = props ?? {};
-
-          return  login(data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type LoginMutationResult = NonNullable<Awaited<ReturnType<typeof login>>>
-    export type LoginMutationBody = BodyType<LoginInput>
-    export type LoginMutationError = ErrorType<ErrorResponse>
-
-    /**
- * @summary Log in
- */
-export const useLogin = <TError = ErrorType<ErrorResponse>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof login>>, TError,{data: BodyType<LoginInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
-        Awaited<ReturnType<typeof login>>,
-        TError,
-        {data: BodyType<LoginInput>},
-        TContext
-      > => {
-      return useMutation(getLoginMutationOptions(options));
-    }
-
-export const getLogoutUrl = () => {
-
-
-
-
-  return `/api/auth/logout`
-}
-
-/**
- * @summary Log out
- */
-export const logout = async ( options?: RequestInit): Promise<SuccessResponse> => {
-
-  return customFetch<SuccessResponse>(getLogoutUrl(),
-  {
-    ...options,
-    method: 'POST'
-
-
-  }
-);}
-
-
-
-
-export const getLogoutMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof logout>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof logout>>, TError,void, TContext> => {
-
-const mutationKey = ['logout'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof logout>>, void> = () => {
-
-
-          return  logout(requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type LogoutMutationResult = NonNullable<Awaited<ReturnType<typeof logout>>>
-
-    export type LogoutMutationError = ErrorType<unknown>
-
-    /**
- * @summary Log out
- */
-export const useLogout = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof logout>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
-        Awaited<ReturnType<typeof logout>>,
-        TError,
-        void,
-        TContext
-      > => {
-      return useMutation(getLogoutMutationOptions(options));
-    }
-
 export const getGetMeUrl = () => {
 
 
@@ -422,6 +210,77 @@ export function useGetMe<TData = Awaited<ReturnType<typeof getMe>>, TError = Err
 
 
 
+export const getSetUsernameUrl = () => {
+
+
+
+
+  return `/api/auth/username`
+}
+
+/**
+ * @summary Set username for new OAuth user
+ */
+export const setUsername = async (setUsernameInput: SetUsernameInput, options?: RequestInit): Promise<User> => {
+
+  return customFetch<User>(getSetUsernameUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      setUsernameInput,)
+  }
+);}
+
+
+
+
+export const getSetUsernameMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setUsername>>, TError,{data: BodyType<SetUsernameInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof setUsername>>, TError,{data: BodyType<SetUsernameInput>}, TContext> => {
+
+const mutationKey = ['setUsername'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setUsername>>, {data: BodyType<SetUsernameInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  setUsername(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SetUsernameMutationResult = NonNullable<Awaited<ReturnType<typeof setUsername>>>
+    export type SetUsernameMutationBody = BodyType<SetUsernameInput>
+    export type SetUsernameMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Set username for new OAuth user
+ */
+export const useSetUsername = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setUsername>>, TError,{data: BodyType<SetUsernameInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof setUsername>>,
+        TError,
+        {data: BodyType<SetUsernameInput>},
+        TContext
+      > => {
+      return useMutation(getSetUsernameMutationOptions(options));
+    }
+
 export const getStartOnboardingUrl = () => {
 
 
@@ -431,7 +290,7 @@ export const getStartOnboardingUrl = () => {
 }
 
 /**
- * @summary Start onboarding — choose path (visionary or builder)
+ * @summary Start onboarding — choose path (visionary or wozniak)
  */
 export const startOnboarding = async (onboardingStartInput: OnboardingStartInput, options?: RequestInit): Promise<OnboardingState> => {
 
@@ -480,7 +339,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type StartOnboardingMutationError = ErrorType<unknown>
 
     /**
- * @summary Start onboarding — choose path (visionary or builder)
+ * @summary Start onboarding — choose path (visionary or wozniak)
  */
 export const useStartOnboarding = <TError = ErrorType<unknown>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startOnboarding>>, TError,{data: BodyType<OnboardingStartInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
@@ -635,37 +494,37 @@ export const useCompleteOnboarding = <TError = ErrorType<unknown>,
       return useMutation(getCompleteOnboardingMutationOptions(options));
     }
 
-export const getSubmitBuilderSkillsUrl = () => {
+export const getSubmitWozniakSkillsUrl = () => {
 
 
 
 
-  return `/api/onboarding/builder/skills`
+  return `/api/onboarding/wozniak/skills`
 }
 
 /**
- * @summary Submit skills for builder path
+ * @summary Submit skills for wozniak path
  */
-export const submitBuilderSkills = async (builderSkillsInput: BuilderSkillsInput, options?: RequestInit): Promise<BuilderChallenge> => {
+export const submitWozniakSkills = async (wozniakSkillsInput: WozniakSkillsInput, options?: RequestInit): Promise<WozniakChallenge> => {
 
-  return customFetch<BuilderChallenge>(getSubmitBuilderSkillsUrl(),
+  return customFetch<WozniakChallenge>(getSubmitWozniakSkillsUrl(),
   {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
-      builderSkillsInput,)
+      wozniakSkillsInput,)
   }
 );}
 
 
 
 
-export const getSubmitBuilderSkillsMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitBuilderSkills>>, TError,{data: BodyType<BuilderSkillsInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof submitBuilderSkills>>, TError,{data: BodyType<BuilderSkillsInput>}, TContext> => {
+export const getSubmitWozniakSkillsMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitWozniakSkills>>, TError,{data: BodyType<WozniakSkillsInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof submitWozniakSkills>>, TError,{data: BodyType<WozniakSkillsInput>}, TContext> => {
 
-const mutationKey = ['submitBuilderSkills'];
+const mutationKey = ['submitWozniakSkills'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -675,10 +534,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof submitBuilderSkills>>, {data: BodyType<BuilderSkillsInput>}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof submitWozniakSkills>>, {data: BodyType<WozniakSkillsInput>}> = (props) => {
           const {data} = props ?? {};
 
-          return  submitBuilderSkills(data,requestOptions)
+          return  submitWozniakSkills(data,requestOptions)
         }
 
 
@@ -688,55 +547,55 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type SubmitBuilderSkillsMutationResult = NonNullable<Awaited<ReturnType<typeof submitBuilderSkills>>>
-    export type SubmitBuilderSkillsMutationBody = BodyType<BuilderSkillsInput>
-    export type SubmitBuilderSkillsMutationError = ErrorType<unknown>
+    export type SubmitWozniakSkillsMutationResult = NonNullable<Awaited<ReturnType<typeof submitWozniakSkills>>>
+    export type SubmitWozniakSkillsMutationBody = BodyType<WozniakSkillsInput>
+    export type SubmitWozniakSkillsMutationError = ErrorType<unknown>
 
     /**
- * @summary Submit skills for builder path
+ * @summary Submit skills for wozniak path
  */
-export const useSubmitBuilderSkills = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitBuilderSkills>>, TError,{data: BodyType<BuilderSkillsInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+export const useSubmitWozniakSkills = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitWozniakSkills>>, TError,{data: BodyType<WozniakSkillsInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
-        Awaited<ReturnType<typeof submitBuilderSkills>>,
+        Awaited<ReturnType<typeof submitWozniakSkills>>,
         TError,
-        {data: BodyType<BuilderSkillsInput>},
+        {data: BodyType<WozniakSkillsInput>},
         TContext
       > => {
-      return useMutation(getSubmitBuilderSkillsMutationOptions(options));
+      return useMutation(getSubmitWozniakSkillsMutationOptions(options));
     }
 
-export const getSubmitBuilderChallengeUrl = () => {
+export const getSubmitWozniakChallengeUrl = () => {
 
 
 
 
-  return `/api/onboarding/builder/challenge`
+  return `/api/onboarding/wozniak/challenge`
 }
 
 /**
- * @summary Submit builder challenge answer for verification
+ * @summary Submit wozniak challenge answer for level assessment
  */
-export const submitBuilderChallenge = async (builderChallengeInput: BuilderChallengeInput, options?: RequestInit): Promise<BuilderChallengeResult> => {
+export const submitWozniakChallenge = async (wozniakChallengeInput: WozniakChallengeInput, options?: RequestInit): Promise<WozniakChallengeResult> => {
 
-  return customFetch<BuilderChallengeResult>(getSubmitBuilderChallengeUrl(),
+  return customFetch<WozniakChallengeResult>(getSubmitWozniakChallengeUrl(),
   {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
-      builderChallengeInput,)
+      wozniakChallengeInput,)
   }
 );}
 
 
 
 
-export const getSubmitBuilderChallengeMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitBuilderChallenge>>, TError,{data: BodyType<BuilderChallengeInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof submitBuilderChallenge>>, TError,{data: BodyType<BuilderChallengeInput>}, TContext> => {
+export const getSubmitWozniakChallengeMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitWozniakChallenge>>, TError,{data: BodyType<WozniakChallengeInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof submitWozniakChallenge>>, TError,{data: BodyType<WozniakChallengeInput>}, TContext> => {
 
-const mutationKey = ['submitBuilderChallenge'];
+const mutationKey = ['submitWozniakChallenge'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -746,10 +605,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof submitBuilderChallenge>>, {data: BodyType<BuilderChallengeInput>}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof submitWozniakChallenge>>, {data: BodyType<WozniakChallengeInput>}> = (props) => {
           const {data} = props ?? {};
 
-          return  submitBuilderChallenge(data,requestOptions)
+          return  submitWozniakChallenge(data,requestOptions)
         }
 
 
@@ -759,22 +618,170 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type SubmitBuilderChallengeMutationResult = NonNullable<Awaited<ReturnType<typeof submitBuilderChallenge>>>
-    export type SubmitBuilderChallengeMutationBody = BodyType<BuilderChallengeInput>
-    export type SubmitBuilderChallengeMutationError = ErrorType<unknown>
+    export type SubmitWozniakChallengeMutationResult = NonNullable<Awaited<ReturnType<typeof submitWozniakChallenge>>>
+    export type SubmitWozniakChallengeMutationBody = BodyType<WozniakChallengeInput>
+    export type SubmitWozniakChallengeMutationError = ErrorType<unknown>
 
     /**
- * @summary Submit builder challenge answer for verification
+ * @summary Submit wozniak challenge answer for level assessment
  */
-export const useSubmitBuilderChallenge = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitBuilderChallenge>>, TError,{data: BodyType<BuilderChallengeInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+export const useSubmitWozniakChallenge = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitWozniakChallenge>>, TError,{data: BodyType<WozniakChallengeInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
-        Awaited<ReturnType<typeof submitBuilderChallenge>>,
+        Awaited<ReturnType<typeof submitWozniakChallenge>>,
         TError,
-        {data: BodyType<BuilderChallengeInput>},
+        {data: BodyType<WozniakChallengeInput>},
         TContext
       > => {
-      return useMutation(getSubmitBuilderChallengeMutationOptions(options));
+      return useMutation(getSubmitWozniakChallengeMutationOptions(options));
+    }
+
+export const getGetDiscoverDeckUrl = () => {
+
+
+
+
+  return `/api/discover`
+}
+
+/**
+ * @summary Get a mixed deck of person + project cards for swiping
+ */
+export const getDiscoverDeck = async ( options?: RequestInit): Promise<DiscoverDeck> => {
+
+  return customFetch<DiscoverDeck>(getGetDiscoverDeckUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetDiscoverDeckQueryKey = () => {
+    return [
+    `/api/discover`
+    ] as const;
+    }
+
+
+export const getGetDiscoverDeckQueryOptions = <TData = Awaited<ReturnType<typeof getDiscoverDeck>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDiscoverDeck>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetDiscoverDeckQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getDiscoverDeck>>> = ({ signal }) => getDiscoverDeck({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getDiscoverDeck>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetDiscoverDeckQueryResult = NonNullable<Awaited<ReturnType<typeof getDiscoverDeck>>>
+export type GetDiscoverDeckQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get a mixed deck of person + project cards for swiping
+ */
+
+export function useGetDiscoverDeck<TData = Awaited<ReturnType<typeof getDiscoverDeck>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDiscoverDeck>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetDiscoverDeckQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getRecordSwipeUrl = () => {
+
+
+
+
+  return `/api/discover/swipe`
+}
+
+/**
+ * @summary Record a swipe action on a card
+ */
+export const recordSwipe = async (swipeInput: SwipeInput, options?: RequestInit): Promise<SuccessResponse> => {
+
+  return customFetch<SuccessResponse>(getRecordSwipeUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      swipeInput,)
+  }
+);}
+
+
+
+
+export const getRecordSwipeMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordSwipe>>, TError,{data: BodyType<SwipeInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof recordSwipe>>, TError,{data: BodyType<SwipeInput>}, TContext> => {
+
+const mutationKey = ['recordSwipe'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof recordSwipe>>, {data: BodyType<SwipeInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  recordSwipe(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RecordSwipeMutationResult = NonNullable<Awaited<ReturnType<typeof recordSwipe>>>
+    export type RecordSwipeMutationBody = BodyType<SwipeInput>
+    export type RecordSwipeMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Record a swipe action on a card
+ */
+export const useRecordSwipe = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordSwipe>>, TError,{data: BodyType<SwipeInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof recordSwipe>>,
+        TError,
+        {data: BodyType<SwipeInput>},
+        TContext
+      > => {
+      return useMutation(getRecordSwipeMutationOptions(options));
     }
 
 export const getGetUserProfileUrl = (username: string,) => {
@@ -1453,7 +1460,7 @@ export const getGetSuggestedUsersUrl = () => {
 }
 
 /**
- * @summary Get suggested users to follow based on onboarding profile match
+ * @summary Get suggested users to follow
  */
 export const getSuggestedUsers = async ( options?: RequestInit): Promise<UserProfile[]> => {
 
@@ -1500,7 +1507,7 @@ export type GetSuggestedUsersQueryError = ErrorType<unknown>
 
 
 /**
- * @summary Get suggested users to follow based on onboarding profile match
+ * @summary Get suggested users to follow
  */
 
 export function useGetSuggestedUsers<TData = Awaited<ReturnType<typeof getSuggestedUsers>>, TError = ErrorType<unknown>>(

@@ -6,18 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface RegisterInput {
+export interface SetUsernameInput {
   /**
      * @minLength 3
      * @maxLength 30
      */
   username: string;
-  email: string;
-  /** @minLength 8 */
-  password: string;
-  /**
-     * @minLength 1
-     * @maxLength 60
-     */
-  displayName: string;
 }

@@ -11,5 +11,5 @@ export type OnboardingStartInputPath = typeof OnboardingStartInputPath[keyof typ
 
 export const OnboardingStartInputPath = {
   visionary: 'visionary',
-  builder: 'builder',
+  wozniak: 'wozniak',
 } as const;

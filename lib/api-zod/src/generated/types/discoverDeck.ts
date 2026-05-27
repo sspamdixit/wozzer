@@ -5,9 +5,8 @@
  * Wozzer social network API
  * OpenAPI spec version: 0.1.0
  */
+import type { DiscoverCard } from './discoverCard';
 
-export interface BuilderChallenge {
-  challengeId: string;
-  skill: string;
-  prompt: string;
+export interface DiscoverDeck {
+  cards: DiscoverCard[];
 }

@@ -1,52 +1,52 @@
 import { Router, type IRouter } from "express";
 import { eq } from "drizzle-orm";
 import { db, usersTable, onboardingSessionsTable } from "@workspace/db";
-import {
-  StartOnboardingBody,
-  OnboardingChatBody,
-  CompleteOnboardingBody,
-  SubmitBuilderSkillsBody,
-  SubmitBuilderChallengeBody,
-} from "@workspace/api-zod";
 import { requireAuth } from "../middlewares/requireAuth";
 import { chat, generateText } from "../lib/gemini";
-import crypto from "crypto";
 import { formatUser } from "./auth";
+import crypto from "crypto";
+import { z } from "zod/v4";
 
 const router: IRouter = Router();
 
 type ChatMessage = { role: "user" | "assistant"; content: string; timestamp: string };
 
-const VISIONARY_SYSTEM = `You are an AI interviewer for Wozzer, a social network for young builders aged 13-18.
-Your role is to interview them about their startup/project idea.
-Be direct, sharp, and intellectually honest — like a Y Combinator partner.
-Ask probing questions that stress-test the idea. Push back on weak assumptions.
-After 4-5 exchanges, generate exactly 3 homework questions — deep follow-up questions that will help the user define their idea further.
-When you've asked enough questions and want to give homework, respond ONLY with valid JSON in this exact format (no other text):
-{"homework": ["question1", "question2", "question3"], "summary": "2-3 sentence summary of their idea"}`;
+const VISIONARY_SYSTEM = `You are the Wozzer AI gatekeeper — a sharp, intellectually honest interviewer for a social network for young builders aged 13-18.
+Your job: figure out if this person has a real idea worth pursuing or just vibes.
 
-const BUILDER_SYSTEM = `You are an AI technical interviewer for Wozzer, a social network for young builders aged 13-18.
-Your role is to verify the user's technical skills through a short practical challenge.
-Be encouraging but rigorous. The challenge should be solvable in 5-10 minutes.
-Keep responses concise and clear.`;
+Style rules:
+- Write SHORT messages. 1-3 sentences max per reply.
+- Be direct, almost blunt — like a thoughtful senior founder texting.
+- Push back on vague answers. Ask "why?" and "how?" a lot.
+- No corporate speak. No encouragement-for-the-sake-of-it.
+
+Interview flow:
+- Start with ONE open question about their idea.
+- Follow up based on what they say. Keep digging.
+- After 4-6 exchanges, decide: are they through, or do they need homework?
+
+If they need homework, respond ONLY with this JSON (no other text):
+{"homework": ["specific question 1", "specific question 2", "specific question 3"], "summary": "2-sentence summary of their idea"}
+
+If they've convinced you, respond ONLY with this JSON:
+{"approved": true, "summary": "2-sentence summary of their idea"}`;
+
+const router2: IRouter = Router();
 
 router.post("/onboarding/start", requireAuth, async (req, res): Promise<void> => {
   const authReq = req as typeof req & { user: typeof usersTable.$inferSelect };
-  const parsed = StartOnboardingBody.safeParse(req.body);
+  const parsed = z.object({ path: z.enum(["visionary", "wozniak"]) }).safeParse(req.body);
   if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.message });
+    res.status(400).json({ error: "path must be visionary or wozniak" });
     return;
   }
 
   const { path } = parsed.data;
   const sessionId = crypto.randomUUID();
 
-  let firstMessage: string;
-  if (path === "visionary") {
-    firstMessage = "Tell me about your idea. What problem does it solve, and why does it need to exist?";
-  } else {
-    firstMessage = "Welcome to the Builder track. What skills are you most confident in? (e.g. web dev, mobile, ML, hardware, design)";
-  }
+  const firstMessage = path === "visionary"
+    ? "Tell me your idea. What problem are you solving?"
+    : "What do you actually build? Pick your main thing.";
 
   const messages: ChatMessage[] = [
     { role: "assistant", content: firstMessage, timestamp: new Date().toISOString() },
@@ -62,21 +62,14 @@ router.post("/onboarding/start", requireAuth, async (req, res): Promise<void> =>
     homeworkQuestions: [],
   });
 
-  res.json({
-    sessionId,
-    messages,
-    phase: "interview",
-    isComplete: false,
-    homeworkQuestions: [],
-    summary: null,
-  });
+  res.json({ sessionId, messages, phase: "interview", isComplete: false, homeworkQuestions: [], summary: null });
 });
 
 router.post("/onboarding/chat", requireAuth, async (req, res): Promise<void> => {
   const authReq = req as typeof req & { user: typeof usersTable.$inferSelect };
-  const parsed = OnboardingChatBody.safeParse(req.body);
+  const parsed = z.object({ message: z.string().min(1) }).safeParse(req.body);
   if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.message });
+    res.status(400).json({ error: "message required" });
     return;
   }
 
@@ -91,12 +84,7 @@ router.post("/onboarding/chat", requireAuth, async (req, res): Promise<void> => 
   }
 
   const existingMessages = session.messages as ChatMessage[];
-  const userMessage: ChatMessage = {
-    role: "user",
-    content: parsed.data.message,
-    timestamp: new Date().toISOString(),
-  };
-
+  const userMessage: ChatMessage = { role: "user", content: parsed.data.message, timestamp: new Date().toISOString() };
   const allMessages = [...existingMessages, userMessage];
 
   const aiResponse = await chat(VISIONARY_SYSTEM, allMessages);
@@ -107,28 +95,25 @@ router.post("/onboarding/chat", requireAuth, async (req, res): Promise<void> => 
   let isComplete = session.isComplete;
   let assistantContent = aiResponse;
 
-  // Check if AI returned homework JSON
   try {
-    const jsonMatch = aiResponse.match(/\{[\s\S]*"homework"[\s\S]*\}/);
+    const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
-      const parsed = JSON.parse(jsonMatch[0]);
-      if (parsed.homework && Array.isArray(parsed.homework)) {
-        homeworkQuestions = parsed.homework;
-        summary = parsed.summary ?? null;
+      const parsed2 = JSON.parse(jsonMatch[0]);
+      if (parsed2.homework && Array.isArray(parsed2.homework)) {
+        homeworkQuestions = parsed2.homework;
+        summary = parsed2.summary ?? null;
         phase = "homework";
-        assistantContent = `Here's your homework before you can proceed. These questions will sharpen your idea:\n\n${homeworkQuestions.map((q, i) => `${i + 1}. ${q}`).join("\n")}`;
+        assistantContent = parsed2.homework.map((q: string, i: number) => `${i + 1}. ${q}`).join("\n");
+      } else if (parsed2.approved === true) {
+        summary = parsed2.summary ?? null;
+        phase = "complete";
+        isComplete = true;
+        assistantContent = "You're through. Welcome to Wozzer.";
       }
     }
-  } catch (_) {
-    // Not JSON, continue normally
-  }
+  } catch (_) { /* not JSON, continue */ }
 
-  const assistantMessage: ChatMessage = {
-    role: "assistant",
-    content: assistantContent,
-    timestamp: new Date().toISOString(),
-  };
-
+  const assistantMessage: ChatMessage = { role: "assistant", content: assistantContent, timestamp: new Date().toISOString() };
   const updatedMessages = [...allMessages, assistantMessage];
 
   await db
@@ -136,21 +121,14 @@ router.post("/onboarding/chat", requireAuth, async (req, res): Promise<void> => 
     .set({ messages: updatedMessages, phase, homeworkQuestions, summary, isComplete, updatedAt: new Date() })
     .where(eq(onboardingSessionsTable.id, session.id));
 
-  res.json({
-    sessionId: session.id,
-    messages: updatedMessages,
-    phase,
-    isComplete,
-    homeworkQuestions,
-    summary,
-  });
+  res.json({ sessionId: session.id, messages: updatedMessages, phase, isComplete, homeworkQuestions, summary });
 });
 
 router.post("/onboarding/complete", requireAuth, async (req, res): Promise<void> => {
   const authReq = req as typeof req & { user: typeof usersTable.$inferSelect };
-  const parsed = CompleteOnboardingBody.safeParse(req.body);
+  const parsed = z.object({ summary: z.string() }).safeParse(req.body);
   if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.message });
+    res.status(400).json({ error: "summary required" });
     return;
   }
 
@@ -164,7 +142,7 @@ router.post("/onboarding/complete", requireAuth, async (req, res): Promise<void>
     return;
   }
 
-  const role = session.path as "visionary" | "builder";
+  const role = session.path as "visionary" | "wozniak";
 
   await db
     .update(onboardingSessionsTable)
@@ -173,38 +151,30 @@ router.post("/onboarding/complete", requireAuth, async (req, res): Promise<void>
 
   const [updatedUser] = await db
     .update(usersTable)
-    .set({
-      role,
-      onboardingComplete: true,
-      aiSummary: parsed.data.summary,
-      level: 1,
-      updatedAt: new Date(),
-    })
+    .set({ role, onboardingComplete: true, aiSummary: parsed.data.summary, level: "beginner", updatedAt: new Date() })
     .where(eq(usersTable.id, authReq.user.id))
     .returning();
 
   res.json(formatUser(updatedUser));
 });
 
-// Builder path
-router.post("/onboarding/builder/skills", requireAuth, async (req, res): Promise<void> => {
-  const parsed = SubmitBuilderSkillsBody.safeParse(req.body);
+// Wozniak path
+router.post("/onboarding/wozniak/skills", requireAuth, async (req, res): Promise<void> => {
+  const parsed = z.object({ skills: z.array(z.string()).min(1) }).safeParse(req.body);
   if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.message });
+    res.status(400).json({ error: "skills array required" });
     return;
   }
 
   const { skills } = parsed.data;
   const primarySkill = skills[0];
 
-  const prompt = `Generate a short technical challenge (5-10 minute task) for a young builder (13-18 years old) who claims to know: ${primarySkill}.
-The challenge should:
-- Be practical and solvable in text (code snippet, explanation, or design decision)
-- Test real understanding, not just definitions
-- Be appropriate for a teenager
+  const prompt = `Generate a short technical challenge (5-10 minutes) for a young builder (13-18) claiming to know: ${skills.join(", ")}.
+The challenge should test real understanding — not definitions.
+Keep it practical: a code snippet, design decision, or explain-the-output problem.
 
 Respond ONLY with valid JSON:
-{"challengeId": "challenge_${Date.now()}", "skill": "${primarySkill}", "prompt": "the challenge prompt here"}`;
+{"challengeId": "c_${Date.now()}", "skill": "${primarySkill}", "prompt": "the challenge here (2-4 sentences, code example if relevant)"}`;
 
   const response = await generateText(prompt);
   const jsonMatch = response.match(/\{[\s\S]*\}/);
@@ -213,15 +183,14 @@ Respond ONLY with valid JSON:
     return;
   }
 
-  const challenge = JSON.parse(jsonMatch[0]);
-  res.json(challenge);
+  res.json(JSON.parse(jsonMatch[0]));
 });
 
-router.post("/onboarding/builder/challenge", requireAuth, async (req, res): Promise<void> => {
+router.post("/onboarding/wozniak/challenge", requireAuth, async (req, res): Promise<void> => {
   const authReq = req as typeof req & { user: typeof usersTable.$inferSelect };
-  const parsed = SubmitBuilderChallengeBody.safeParse(req.body);
+  const parsed = z.object({ challengeId: z.string(), answer: z.string().min(1) }).safeParse(req.body);
   if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.message });
+    res.status(400).json({ error: "challengeId and answer required" });
     return;
   }
 
@@ -231,40 +200,43 @@ router.post("/onboarding/builder/challenge", requireAuth, async (req, res): Prom
 Challenge ID: ${challengeId}
 Their answer: ${answer}
 
-Evaluate whether they demonstrated real understanding. Be fair and encouraging.
+Assess their level honestly:
+- beginner: knows the basics, gets the idea but misses nuance or makes simple errors
+- intermediate: solid understanding, correct approach, minor gaps
+- advanced: deep understanding, edge cases considered, would impress a senior dev
+
 Respond ONLY with valid JSON:
-{"passed": true/false, "feedback": "short encouraging feedback (1-2 sentences)"}`;
+{"level": "beginner"|"intermediate"|"advanced", "feedback": "1-2 sentences, honest and specific"}`;
 
   const response = await generateText(prompt);
   const jsonMatch = response.match(/\{[\s\S]*\}/);
   if (!jsonMatch) {
-    res.status(500).json({ error: "Failed to evaluate challenge" });
+    res.status(500).json({ error: "Failed to evaluate" });
     return;
   }
 
   const result = JSON.parse(jsonMatch[0]);
+  const level = ["beginner", "intermediate", "advanced"].includes(result.level) ? result.level : "beginner";
 
-  if (result.passed) {
-    // Mark onboarding complete for builder
-    const [session] = await db
-      .select()
-      .from(onboardingSessionsTable)
-      .where(eq(onboardingSessionsTable.userId, authReq.user.id));
+  // Auto-complete onboarding for wozniak path
+  const [session] = await db
+    .select()
+    .from(onboardingSessionsTable)
+    .where(eq(onboardingSessionsTable.userId, authReq.user.id));
 
-    if (session) {
-      await db
-        .update(onboardingSessionsTable)
-        .set({ isComplete: true, phase: "complete", updatedAt: new Date() })
-        .where(eq(onboardingSessionsTable.id, session.id));
-    }
-
+  if (session) {
     await db
-      .update(usersTable)
-      .set({ role: "builder", onboardingComplete: true, level: 1, updatedAt: new Date() })
-      .where(eq(usersTable.id, authReq.user.id));
+      .update(onboardingSessionsTable)
+      .set({ isComplete: true, phase: "complete", updatedAt: new Date() })
+      .where(eq(onboardingSessionsTable.id, session.id));
   }
 
-  res.json(result);
+  await db
+    .update(usersTable)
+    .set({ role: "wozniak", onboardingComplete: true, level, updatedAt: new Date() })
+    .where(eq(usersTable.id, authReq.user.id));
+
+  res.json({ level, feedback: result.feedback });
 });
 
 export default router;

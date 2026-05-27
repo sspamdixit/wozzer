@@ -17,63 +17,6 @@ export const HealthCheckResponse = zod.object({
 
 
 /**
- * @summary Register a new user
- */
-export const registerBodyUsernameMin = 3;
-export const registerBodyUsernameMax = 30;
-
-export const registerBodyPasswordMin = 8;
-
-export const registerBodyDisplayNameMax = 60;
-
-
-
-export const RegisterBody = zod.object({
-  "username": zod.string().min(registerBodyUsernameMin).max(registerBodyUsernameMax),
-  "email": zod.string(),
-  "password": zod.string().min(registerBodyPasswordMin),
-  "displayName": zod.string().min(1).max(registerBodyDisplayNameMax)
-})
-
-
-/**
- * @summary Log in
- */
-export const LoginBody = zod.object({
-  "email": zod.string(),
-  "password": zod.string()
-})
-
-export const LoginResponse = zod.object({
-  "user": zod.object({
-  "id": zod.string(),
-  "username": zod.string(),
-  "email": zod.string(),
-  "displayName": zod.string(),
-  "bio": zod.string().nullish(),
-  "avatarUrl": zod.string().nullish(),
-  "role": zod.union([zod.literal('visionary'),zod.literal('builder'),zod.literal(null)]).nullable(),
-  "level": zod.number().nullish(),
-  "skills": zod.array(zod.string()).optional(),
-  "projectLinks": zod.array(zod.string()).optional(),
-  "onboardingComplete": zod.boolean(),
-  "followersCount": zod.number(),
-  "followingCount": zod.number(),
-  "createdAt": zod.string()
-}),
-  "token": zod.string()
-})
-
-
-/**
- * @summary Log out
- */
-export const LogoutResponse = zod.object({
-  "success": zod.boolean()
-})
-
-
-/**
  * @summary Get current authenticated user
  */
 export const GetMeResponse = zod.object({
@@ -83,8 +26,8 @@ export const GetMeResponse = zod.object({
   "displayName": zod.string(),
   "bio": zod.string().nullish(),
   "avatarUrl": zod.string().nullish(),
-  "role": zod.union([zod.literal('visionary'),zod.literal('builder'),zod.literal(null)]).nullable(),
-  "level": zod.number().nullish(),
+  "role": zod.union([zod.literal('visionary'),zod.literal('wozniak'),zod.literal(null)]).nullable(),
+  "level": zod.union([zod.literal('beginner'),zod.literal('intermediate'),zod.literal('advanced'),zod.literal(null)]).nullable(),
   "skills": zod.array(zod.string()).optional(),
   "projectLinks": zod.array(zod.string()).optional(),
   "onboardingComplete": zod.boolean(),
@@ -95,10 +38,40 @@ export const GetMeResponse = zod.object({
 
 
 /**
- * @summary Start onboarding — choose path (visionary or builder)
+ * @summary Set username for new OAuth user
+ */
+export const setUsernameBodyUsernameMin = 3;
+export const setUsernameBodyUsernameMax = 30;
+
+
+
+export const SetUsernameBody = zod.object({
+  "username": zod.string().min(setUsernameBodyUsernameMin).max(setUsernameBodyUsernameMax)
+})
+
+export const SetUsernameResponse = zod.object({
+  "id": zod.string(),
+  "username": zod.string(),
+  "email": zod.string(),
+  "displayName": zod.string(),
+  "bio": zod.string().nullish(),
+  "avatarUrl": zod.string().nullish(),
+  "role": zod.union([zod.literal('visionary'),zod.literal('wozniak'),zod.literal(null)]).nullable(),
+  "level": zod.union([zod.literal('beginner'),zod.literal('intermediate'),zod.literal('advanced'),zod.literal(null)]).nullable(),
+  "skills": zod.array(zod.string()).optional(),
+  "projectLinks": zod.array(zod.string()).optional(),
+  "onboardingComplete": zod.boolean(),
+  "followersCount": zod.number(),
+  "followingCount": zod.number(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Start onboarding — choose path (visionary or wozniak)
  */
 export const StartOnboardingBody = zod.object({
-  "path": zod.enum(['visionary', 'builder'])
+  "path": zod.enum(['visionary', 'wozniak'])
 })
 
 export const StartOnboardingResponse = zod.object({
@@ -150,8 +123,8 @@ export const CompleteOnboardingResponse = zod.object({
   "displayName": zod.string(),
   "bio": zod.string().nullish(),
   "avatarUrl": zod.string().nullish(),
-  "role": zod.union([zod.literal('visionary'),zod.literal('builder'),zod.literal(null)]).nullable(),
-  "level": zod.number().nullish(),
+  "role": zod.union([zod.literal('visionary'),zod.literal('wozniak'),zod.literal(null)]).nullable(),
+  "level": zod.union([zod.literal('beginner'),zod.literal('intermediate'),zod.literal('advanced'),zod.literal(null)]).nullable(),
   "skills": zod.array(zod.string()).optional(),
   "projectLinks": zod.array(zod.string()).optional(),
   "onboardingComplete": zod.boolean(),
@@ -162,16 +135,16 @@ export const CompleteOnboardingResponse = zod.object({
 
 
 /**
- * @summary Submit skills for builder path
+ * @summary Submit skills for wozniak path
  */
 
 
 
-export const SubmitBuilderSkillsBody = zod.object({
+export const SubmitWozniakSkillsBody = zod.object({
   "skills": zod.array(zod.string()).min(1)
 })
 
-export const SubmitBuilderSkillsResponse = zod.object({
+export const SubmitWozniakSkillsResponse = zod.object({
   "challengeId": zod.string(),
   "skill": zod.string(),
   "prompt": zod.string()
@@ -179,16 +152,66 @@ export const SubmitBuilderSkillsResponse = zod.object({
 
 
 /**
- * @summary Submit builder challenge answer for verification
+ * @summary Submit wozniak challenge answer for level assessment
  */
-export const SubmitBuilderChallengeBody = zod.object({
+export const SubmitWozniakChallengeBody = zod.object({
   "challengeId": zod.string(),
   "answer": zod.string()
 })
 
-export const SubmitBuilderChallengeResponse = zod.object({
-  "passed": zod.boolean(),
+export const SubmitWozniakChallengeResponse = zod.object({
+  "level": zod.enum(['beginner', 'intermediate', 'advanced']),
   "feedback": zod.string()
+})
+
+
+/**
+ * @summary Get a mixed deck of person + project cards for swiping
+ */
+export const GetDiscoverDeckResponse = zod.object({
+  "cards": zod.array(zod.object({
+  "id": zod.string(),
+  "type": zod.enum(['person', 'project']),
+  "person": zod.object({
+  "id": zod.string(),
+  "username": zod.string(),
+  "displayName": zod.string(),
+  "bio": zod.string().nullish(),
+  "avatarUrl": zod.string().nullish(),
+  "role": zod.union([zod.literal('visionary'),zod.literal('wozniak'),zod.literal(null)]).nullable(),
+  "level": zod.union([zod.literal('beginner'),zod.literal('intermediate'),zod.literal('advanced'),zod.literal(null)]).nullable(),
+  "skills": zod.array(zod.string()).optional(),
+  "projectLinks": zod.array(zod.string()).optional(),
+  "followersCount": zod.number(),
+  "followingCount": zod.number(),
+  "createdAt": zod.string(),
+  "matchScore": zod.number().nullish()
+}).optional(),
+  "project": zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "tags": zod.array(zod.string()).optional(),
+  "screenshotUrl": zod.string().nullish(),
+  "linkUrl": zod.string().nullish(),
+  "authorUsername": zod.string(),
+  "authorLevel": zod.string().nullable()
+}).optional()
+}))
+})
+
+
+/**
+ * @summary Record a swipe action on a card
+ */
+export const RecordSwipeBody = zod.object({
+  "targetId": zod.string(),
+  "targetType": zod.enum(['person', 'project']),
+  "direction": zod.enum(['left', 'right'])
+})
+
+export const RecordSwipeResponse = zod.object({
+  "success": zod.boolean()
 })
 
 
@@ -205,8 +228,8 @@ export const GetUserProfileResponse = zod.object({
   "displayName": zod.string(),
   "bio": zod.string().nullish(),
   "avatarUrl": zod.string().nullish(),
-  "role": zod.union([zod.literal('visionary'),zod.literal('builder'),zod.literal(null)]).nullable(),
-  "level": zod.number().nullish(),
+  "role": zod.union([zod.literal('visionary'),zod.literal('wozniak'),zod.literal(null)]).nullable(),
+  "level": zod.union([zod.literal('beginner'),zod.literal('intermediate'),zod.literal('advanced'),zod.literal(null)]).nullable(),
   "skills": zod.array(zod.string()).optional(),
   "projectLinks": zod.array(zod.string()).optional(),
   "followersCount": zod.number(),
@@ -238,8 +261,8 @@ export const ListUserPostsResponse = zod.object({
   "displayName": zod.string(),
   "bio": zod.string().nullish(),
   "avatarUrl": zod.string().nullish(),
-  "role": zod.union([zod.literal('visionary'),zod.literal('builder'),zod.literal(null)]).nullable(),
-  "level": zod.number().nullish(),
+  "role": zod.union([zod.literal('visionary'),zod.literal('wozniak'),zod.literal(null)]).nullable(),
+  "level": zod.union([zod.literal('beginner'),zod.literal('intermediate'),zod.literal('advanced'),zod.literal(null)]).nullable(),
   "skills": zod.array(zod.string()).optional(),
   "projectLinks": zod.array(zod.string()).optional(),
   "followersCount": zod.number(),
@@ -268,8 +291,8 @@ export const UpdateMyProfileResponse = zod.object({
   "displayName": zod.string(),
   "bio": zod.string().nullish(),
   "avatarUrl": zod.string().nullish(),
-  "role": zod.union([zod.literal('visionary'),zod.literal('builder'),zod.literal(null)]).nullable(),
-  "level": zod.number().nullish(),
+  "role": zod.union([zod.literal('visionary'),zod.literal('wozniak'),zod.literal(null)]).nullable(),
+  "level": zod.union([zod.literal('beginner'),zod.literal('intermediate'),zod.literal('advanced'),zod.literal(null)]).nullable(),
   "skills": zod.array(zod.string()).optional(),
   "projectLinks": zod.array(zod.string()).optional(),
   "onboardingComplete": zod.boolean(),
@@ -301,8 +324,8 @@ export const GetFeedResponse = zod.object({
   "displayName": zod.string(),
   "bio": zod.string().nullish(),
   "avatarUrl": zod.string().nullish(),
-  "role": zod.union([zod.literal('visionary'),zod.literal('builder'),zod.literal(null)]).nullable(),
-  "level": zod.number().nullish(),
+  "role": zod.union([zod.literal('visionary'),zod.literal('wozniak'),zod.literal(null)]).nullable(),
+  "level": zod.union([zod.literal('beginner'),zod.literal('intermediate'),zod.literal('advanced'),zod.literal(null)]).nullable(),
   "skills": zod.array(zod.string()).optional(),
   "projectLinks": zod.array(zod.string()).optional(),
   "followersCount": zod.number(),
@@ -379,7 +402,7 @@ export const GetFollowStatusResponse = zod.object({
 
 
 /**
- * @summary Get suggested users to follow based on onboarding profile match
+ * @summary Get suggested users to follow
  */
 export const GetSuggestedUsersResponseItem = zod.object({
   "id": zod.string(),
@@ -387,8 +410,8 @@ export const GetSuggestedUsersResponseItem = zod.object({
   "displayName": zod.string(),
   "bio": zod.string().nullish(),
   "avatarUrl": zod.string().nullish(),
-  "role": zod.union([zod.literal('visionary'),zod.literal('builder'),zod.literal(null)]).nullable(),
-  "level": zod.number().nullish(),
+  "role": zod.union([zod.literal('visionary'),zod.literal('wozniak'),zod.literal(null)]).nullable(),
+  "level": zod.union([zod.literal('beginner'),zod.literal('intermediate'),zod.literal('advanced'),zod.literal(null)]).nullable(),
   "skills": zod.array(zod.string()).optional(),
   "projectLinks": zod.array(zod.string()).optional(),
   "followersCount": zod.number(),

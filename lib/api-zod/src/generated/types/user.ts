@@ -5,6 +5,7 @@
  * Wozzer social network API
  * OpenAPI spec version: 0.1.0
  */
+import type { UserLevel } from './userLevel';
 import type { UserRole } from './userRole';
 
 export interface User {
@@ -19,7 +20,7 @@ export interface User {
   /** @nullable */
   role: UserRole;
   /** @nullable */
-  level?: number | null;
+  level: UserLevel;
   skills?: string[];
   projectLinks?: string[];
   onboardingComplete: boolean;

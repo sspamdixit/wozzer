@@ -14,5 +14,5 @@ export type UserProfileRole = typeof UserProfileRole[keyof typeof UserProfileRol
 
 export const UserProfileRole = {
   visionary: 'visionary',
-  builder: 'builder',
+  wozniak: 'wozniak',
 } as const;
