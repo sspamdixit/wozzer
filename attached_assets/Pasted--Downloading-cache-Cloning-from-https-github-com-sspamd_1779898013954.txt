@@ -1,0 +1,40 @@
+==> Downloading cache...
+==> Cloning from https://github.com/sspamdixit/wozzer
+==> Checking out commit 4cff3ae8dc8b959e2e2cf5268781f6053e8a997c in branch main
+==> Downloaded 94MB in 2s. Extraction took 3s.
+==> Using Node.js version 24.14.1 (default)
+==> Docs on specifying a Node.js version: https://render.com/docs/node-version
+==> Running build command 'pnpm install --frozen-lockfile; pnpm run build'...
+> workspace@0.0.0 build /opt/render/project/src
+> pnpm run typecheck && pnpm -r --filter '!@workspace/mockup-sandbox' --if-present run build
+> workspace@0.0.0 typecheck /opt/render/project/src
+> pnpm run typecheck:libs && pnpm -r --filter "./artifacts/**" --filter "./scripts" --if-present run typecheck
+> workspace@0.0.0 typecheck:libs /opt/render/project/src
+> tsc --build
+==> Uploading build...
+==> Uploaded in 3.8s. Compression took 4.0s
+==> Build successful 🎉
+==> Deploying...
+==> Setting WEB_CONCURRENCY=1 by default, based on available CPUs in the instance
+Error: DATABASE_URL must be set. Did you forget to provision a database?
+    at <anonymous> (/opt/render/project/src/lib/db/src/index.ts:8:9)
+    at ModuleJob.run (node:internal/modules/esm/module_job:430:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:661:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+Node.js v24.14.1
+ ELIFECYCLE  Command failed with exit code 1.
+==> Exited with status 1
+==> Common ways to troubleshoot your deploy: https://render.com/docs/troubleshooting-deploys
+==> Running 'pnpm run start'
+> workspace@0.0.0 start /opt/render/project/src
+> node --enable-source-maps artifacts/api-server/dist/index.mjs
+/opt/render/project/src/lib/db/src/index.ts:8
+  throw new Error(
+        ^
+Error: DATABASE_URL must be set. Did you forget to provision a database?
+    at <anonymous> (/opt/render/project/src/lib/db/src/index.ts:8:9)
+    at ModuleJob.run (node:internal/modules/esm/module_job:430:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:661:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+Node.js v24.14.1
+ ELIFECYCLE  Command failed with exit code 1.
