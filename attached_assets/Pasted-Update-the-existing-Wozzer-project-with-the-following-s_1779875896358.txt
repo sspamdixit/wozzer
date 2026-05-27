@@ -1,0 +1,74 @@
+Update the existing Wozzer project with the following specific changes. Do not rebuild what already works unless instructed.
+1. Replace Clerk Auth
+Remove Clerk entirely. Build proprietary auth supporting four sign-in methods:
+
+Google OAuth
+GitHub OAuth
+Phone number + OTP (use Twilio or Firebase Phone Auth)
+Email + password
+
+Use Supabase Auth to handle all four methods — it supports all of them natively. Store sessions in Supabase.
+2. Fix and Rebuild Onboarding AI
+Remove the broken Gemini implementation. Rebuild it using the Gemini API directly. On every API call attempt the following models in order until one responds successfully:
+
+gemini-2.5-pro
+gemini-2.0-flash
+gemini-1.5-pro
+gemini-1.5-flash
+gemini-1.0-pro
+
+The onboarding is a conversational AI interview. Two paths:
+Visionary path:
+
+AI asks about their idea conversationally, like texting
+Stress tests the idea with follow up questions
+If answers are too vague or shallow, AI gives homework — specific questions they must answer before proceeding
+Only when the AI is satisfied does the user get through to the app
+
+Wozniak path:
+
+User selects their primary skills
+AI gives them a short technical challenge relevant to those skills
+They submit their answer and AI evaluates it
+User is assigned a starting level: Beginner, Intermediate, or Advanced
+
+Onboarding must feel like texting, not filling a form. Short AI messages, short expected replies, fast back and forth.
+3. Swipe Mechanic
+Replace any existing feed or browse UI with a swipe-based card deck as the primary experience.
+Card ratio: every 4 cards shown, 3 are person cards and 1 is a project card. Randomise the order but maintain the ratio.
+Person card shows:
+
+Username and profile photo placeholder
+Role badge (Visionary or Wozniak)
+Level badge
+2-3 skill or interest tags
+One line bio
+
+Project card shows:
+
+Project name and one line description
+Stack or category tags
+Builder's username and level badge
+Link or screenshot if available
+
+Swipe right = interested. Swipe left = pass. Every swipe is stored and used to seed the secondary feed.
+After the initial onboarding swipe deck (minimum 10 cards), user lands on the feed.
+4. Feed
+Secondary but important. Chronological posts seeded by swipe history. Users can post text, images, links, project updates, memes, anything. Simple post composer at the top.
+5. Design — Scrapbook
+Redesign the entire UI with this aesthetic direction:
+
+Background: off-white cream paper texture, CSS grain overlay, not pure white or black
+Cards: subtle 1-2 degree random rotation variance, feels hand-placed not grid-locked
+Typography: use Caveat or Architects Daughter from Google Fonts for accent labels, tags, and badges only. Use Fraunces or Playfair Display for headings. Keep body text clean and readable.
+Badges: sticker-like, chunky, high contrast, feel physically stuck on
+Card decoration: small washi tape strip at top of cards, CSS only, no images
+Borders: slightly irregular ink-like, not perfect box shadows
+Colour palette: cream (#F5F0E8), dark ink (#1A1A1A), accent orange-red (#E8450A)
+One or two scrapbook elements per component maximum — intentional not chaotic
+
+Mobile first. Must look exceptional on a 390px wide screen. No Inter font. No purple gradients. No generic AI UI patterns.
+Do not touch:
+
+Supabase database structure if it exists
+Any working API connections
