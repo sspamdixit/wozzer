@@ -18,4 +18,6 @@ export interface ProjectCard {
   authorUsername: string;
   /** @nullable */
   authorLevel: string | null;
+  authorXpLevel: number;
+  authorStreakCurrent: number;
 }

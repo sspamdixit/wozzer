@@ -4,6 +4,7 @@ import { db, postsTable, usersTable, followsTable, type Post } from "@workspace/
 import { CreatePostBody, DeletePostParams } from "@workspace/api-zod";
 import { requireAuth } from "../middlewares/requireAuth";
 import { formatUserProfile } from "./users";
+import { awardXp, updateStreak, grantAchievement } from "../lib/gamification";
 import crypto from "crypto";
 
 const router: IRouter = Router();
@@ -11,14 +12,12 @@ const router: IRouter = Router();
 router.get("/posts", requireAuth, async (req, res): Promise<void> => {
   const authReq = req as typeof req & { user: typeof usersTable.$inferSelect };
 
-  // Get IDs of people the current user follows
   const following = await db
     .select({ followingId: followsTable.followingId })
     .from(followsTable)
     .where(eq(followsTable.followerId, authReq.user.id));
 
   const followingIds = following.map((f) => f.followingId);
-  // Include own posts
   const feedUserIds = [...followingIds, authReq.user.id];
 
   let posts: Post[];
@@ -33,7 +32,6 @@ router.get("/posts", requireAuth, async (req, res): Promise<void> => {
       .limit(30);
   }
 
-  // Fetch authors
   const authorIds = [...new Set(posts.map((p) => p.authorId))];
   const authors = authorIds.length > 0
     ? await db.select().from(usersTable).where(inArray(usersTable.id, authorIds))
@@ -78,6 +76,18 @@ router.post("/posts", requireAuth, async (req, res): Promise<void> => {
       linkTitle: linkTitle ?? null,
     })
     .returning();
+
+  await awardXp(authReq.user.id, 25);
+  await updateStreak(authReq.user.id);
+
+  const existingPosts = await db
+    .select()
+    .from(postsTable)
+    .where(eq(postsTable.authorId, authReq.user.id))
+    .limit(2);
+  if (existingPosts.length === 1) {
+    await grantAchievement(authReq.user.id, "first_post");
+  }
 
   res.status(201).json({
     id: post.id,

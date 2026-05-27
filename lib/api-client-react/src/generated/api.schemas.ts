@@ -67,6 +67,12 @@ export interface User {
   followersCount: number;
   followingCount: number;
   createdAt: string;
+  xpLevel: number;
+  xp: number;
+  streakCurrent: number;
+  streakLongest: number;
+  visibilityScore: number;
+  achievements?: string[];
 }
 
 /**
@@ -111,6 +117,12 @@ export interface UserProfile {
   createdAt: string;
   /** @nullable */
   matchScore?: number | null;
+  xpLevel: number;
+  xp: number;
+  streakCurrent: number;
+  streakLongest: number;
+  visibilityScore: number;
+  achievements?: string[];
 }
 
 export interface ProfileUpdate {
@@ -222,6 +234,8 @@ export interface ProjectCard {
   authorUsername: string;
   /** @nullable */
   authorLevel: string | null;
+  authorXpLevel: number;
+  authorStreakCurrent: number;
 }
 
 export interface DiscoverCard {
@@ -299,3 +313,26 @@ export type GetFeedParams = {
 cursor?: string | null;
 };
 
+export interface CertificationTrack {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  levels: string[];
+  isDemo: boolean;
+  xpReward: number;
+}
+
+export interface CertificationQuestion {
+  id: string;
+  text: string;
+  options: string[];
+  correctIndex: number;
+}
+
+export interface CertificationResult {
+  passed: boolean;
+  score: number;
+  xpAwarded: number;
+  feedback: string;
+}

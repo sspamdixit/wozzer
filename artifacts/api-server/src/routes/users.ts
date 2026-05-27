@@ -1,9 +1,10 @@
 import { Router, type IRouter } from "express";
 import { eq, desc } from "drizzle-orm";
-import { db, usersTable, postsTable } from "@workspace/db";
+import { db, usersTable, postsTable, achievementsTable } from "@workspace/db";
 import { UpdateMyProfileBody } from "@workspace/api-zod";
 import { requireAuth } from "../middlewares/requireAuth";
 import { formatUser } from "./auth";
+import { recalculateVisibilityScore } from "../lib/gamification";
 
 const router: IRouter = Router();
 
@@ -22,6 +23,11 @@ function formatUserProfile(user: typeof usersTable.$inferSelect, matchScore?: nu
     followingCount: user.followingCount,
     createdAt: user.createdAt.toISOString(),
     matchScore: matchScore ?? null,
+    xpLevel: user.xpLevel ?? 0,
+    xp: user.xp ?? 0,
+    streakCurrent: user.streakCurrent ?? 0,
+    streakLongest: user.streakLongest ?? 0,
+    visibilityScore: user.visibilityScore ?? 0,
   };
 }
 
@@ -32,7 +38,13 @@ router.get("/users/:username", async (req, res): Promise<void> => {
     res.status(404).json({ error: "User not found" });
     return;
   }
-  res.json(formatUserProfile(user));
+
+  const achievements = await db
+    .select()
+    .from(achievementsTable)
+    .where(eq(achievementsTable.userId, user.id));
+
+  res.json({ ...formatUserProfile(user), achievements: achievements.map(a => a.achievementType) });
 });
 
 router.get("/users/:username/posts", async (req, res): Promise<void> => {
@@ -82,6 +94,8 @@ router.patch("/users/me/profile", requireAuth, async (req, res): Promise<void> =
     .set({ ...updates, updatedAt: new Date() })
     .where(eq(usersTable.id, authReq.user.id))
     .returning();
+
+  await recalculateVisibilityScore(authReq.user.id);
 
   res.json(formatUser(updated));
 });

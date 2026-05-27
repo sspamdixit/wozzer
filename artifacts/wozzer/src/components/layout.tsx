@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
-import { Home, User, Settings, Layers, LogOut } from "lucide-react";
+import { Home, User, Settings, Layers, LogOut, Award } from "lucide-react";
 
 export function Layout({ children }: { children: ReactNode }) {
   const { user, signOut } = useAuth();
@@ -34,7 +34,6 @@ export function Layout({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row max-w-[1100px] mx-auto">
-      {/* Mobile Header */}
       <div
         className="md:hidden flex items-center justify-between px-4 py-3 sticky top-0 z-50"
         style={{ background: "#F5F0E8", borderBottom: "2px solid #1A1A1A" }}
@@ -50,12 +49,10 @@ export function Layout({ children }: { children: ReactNode }) {
         </Link>
       </div>
 
-      {/* Sidebar */}
       <nav
         className="fixed bottom-0 w-full md:relative md:w-56 md:flex-shrink-0 z-40 flex md:flex-col justify-around md:justify-start gap-1 md:gap-0 md:pt-8 md:px-4"
         style={{ background: "#F5F0E8", borderTop: "2px solid #1A1A1A", borderRight: "none" }}
       >
-        {/* Desktop logo */}
         <div className="hidden md:block mb-6 px-4">
           <span style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: "1.8rem", fontWeight: 700, color: "#1A1A1A" }}>
             Wozzer
@@ -64,6 +61,7 @@ export function Layout({ children }: { children: ReactNode }) {
 
         {navItem("/feed", <Home size={18} />, "Feed")}
         {navItem("/discover", <Layers size={18} />, "Discover")}
+        {navItem("/certifications", <Award size={18} />, "Certs")}
         {navItem(`/profile/${user?.username}`, <User size={18} />, "Profile")}
         {navItem("/settings", <Settings size={18} />, "Settings")}
 
@@ -79,7 +77,6 @@ export function Layout({ children }: { children: ReactNode }) {
         </div>
       </nav>
 
-      {/* Main */}
       <main className="flex-1 w-full pb-20 md:pb-0" style={{ borderLeft: "2px solid #1A1A1A" }}>
         {children}
       </main>

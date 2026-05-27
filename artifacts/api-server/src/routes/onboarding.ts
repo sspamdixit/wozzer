@@ -4,14 +4,15 @@ import { db, usersTable, onboardingSessionsTable } from "@workspace/db";
 import { requireAuth } from "../middlewares/requireAuth";
 import { chat, generateText } from "../lib/gemini";
 import { formatUser } from "./auth";
+import { awardXp, updateStreak, grantAchievement, recalculateVisibilityScore } from "../lib/gamification";
 import crypto from "crypto";
-import { z } from "zod/v4";
+import { z } from "zod";
 
 const router: IRouter = Router();
 
 type ChatMessage = { role: "user" | "assistant"; content: string; timestamp: string };
 
-const VISIONARY_SYSTEM = `You are the Wozzer AI gatekeeper — a sharp, intellectually honest interviewer for a social network for young builders aged 13-18.
+const VISIONARY_SYSTEM = `You are the Wozzer AI — a sharp, intellectually honest interviewer for a social network for young builders aged 13-18.
 Your job: figure out if this person has a real idea worth pursuing or just vibes.
 
 Style rules:
@@ -19,6 +20,7 @@ Style rules:
 - Be direct, almost blunt — like a thoughtful senior founder texting.
 - Push back on vague answers. Ask "why?" and "how?" a lot.
 - No corporate speak. No encouragement-for-the-sake-of-it.
+- If their idea is weak, say so directly. Give specific homework — but never block them.
 
 Interview flow:
 - Start with ONE open question about their idea.
@@ -30,8 +32,6 @@ If they need homework, respond ONLY with this JSON (no other text):
 
 If they've convinced you, respond ONLY with this JSON:
 {"approved": true, "summary": "2-sentence summary of their idea"}`;
-
-const router2: IRouter = Router();
 
 router.post("/onboarding/start", requireAuth, async (req, res): Promise<void> => {
   const authReq = req as typeof req & { user: typeof usersTable.$inferSelect };
@@ -155,10 +155,34 @@ router.post("/onboarding/complete", requireAuth, async (req, res): Promise<void>
     .where(eq(usersTable.id, authReq.user.id))
     .returning();
 
+  await awardXp(authReq.user.id, 75);
+  await updateStreak(authReq.user.id);
+  await grantAchievement(authReq.user.id, "interview_complete");
+  await recalculateVisibilityScore(authReq.user.id);
+
+  const [refreshed] = await db.select().from(usersTable).where(eq(usersTable.id, authReq.user.id));
+  res.json(formatUser(refreshed ?? updatedUser));
+});
+
+router.post("/onboarding/skip", requireAuth, async (req, res): Promise<void> => {
+  const authReq = req as typeof req & { user: typeof usersTable.$inferSelect };
+  const parsed = z.object({ path: z.enum(["visionary", "wozniak"]) }).safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "path required" });
+    return;
+  }
+
+  const [updatedUser] = await db
+    .update(usersTable)
+    .set({ role: parsed.data.path, onboardingComplete: true, updatedAt: new Date() })
+    .where(eq(usersTable.id, authReq.user.id))
+    .returning();
+
+  await recalculateVisibilityScore(authReq.user.id);
+
   res.json(formatUser(updatedUser));
 });
 
-// Wozniak path
 router.post("/onboarding/wozniak/skills", requireAuth, async (req, res): Promise<void> => {
   const parsed = z.object({ skills: z.array(z.string()).min(1) }).safeParse(req.body);
   if (!parsed.success) {
@@ -218,7 +242,6 @@ Respond ONLY with valid JSON:
   const result = JSON.parse(jsonMatch[0]);
   const level = ["beginner", "intermediate", "advanced"].includes(result.level) ? result.level : "beginner";
 
-  // Auto-complete onboarding for wozniak path
   const [session] = await db
     .select()
     .from(onboardingSessionsTable)
@@ -235,6 +258,11 @@ Respond ONLY with valid JSON:
     .update(usersTable)
     .set({ role: "wozniak", onboardingComplete: true, level, updatedAt: new Date() })
     .where(eq(usersTable.id, authReq.user.id));
+
+  await awardXp(authReq.user.id, 75);
+  await updateStreak(authReq.user.id);
+  await grantAchievement(authReq.user.id, "challenge_complete");
+  await recalculateVisibilityScore(authReq.user.id);
 
   res.json({ level, feedback: result.feedback });
 });

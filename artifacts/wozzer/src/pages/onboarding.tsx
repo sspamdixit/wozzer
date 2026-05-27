@@ -12,14 +12,25 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { Loader2, Send } from "lucide-react";
 
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+async function skipOnboarding(path: "visionary" | "wozniak", token: string): Promise<void> {
+  await fetch(`${BASE}/api/onboarding/skip`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ path }),
+  });
+}
+
 export default function Onboarding() {
-  const { user, refreshUser } = useAuth();
+  const { user, refreshUser, session } = useAuth();
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
 
   const [state, setState] = useState<OnboardingState | null>(null);
   const [chatInput, setChatInput] = useState("");
   const [selectedPath, setSelectedPath] = useState<"visionary" | "wozniak" | null>(null);
+  const [isSkipping, setIsSkipping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const startOnboarding = useStartOnboarding();
@@ -58,6 +69,21 @@ export default function Onboarding() {
       } catch (e: any) {
         setError(e.message);
       }
+    }
+  };
+
+  const handleSkip = async (path: "visionary" | "wozniak") => {
+    setIsSkipping(true);
+    try {
+      const token = session?.access_token ?? "";
+      await skipOnboarding(path, token);
+      queryClient.invalidateQueries();
+      await refreshUser();
+      setLocation("/feed");
+    } catch (e: any) {
+      setError("Couldn't skip — try again");
+    } finally {
+      setIsSkipping(false);
     }
   };
 
@@ -132,18 +158,17 @@ export default function Onboarding() {
     outline: "none",
   };
 
-  // Path selection
   if (!selectedPath) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-6" style={{ background: "#F5F0E8" }}>
         <div style={{ maxWidth: 480, width: "100%" }}>
           <div className="washi washi-top washi-yellow" style={{ position: "relative", left: "50%", transform: "translateX(-50%) rotate(-2deg)", width: 90, marginBottom: -9 }} />
-          <div className="scrap-card p-8 mb-6" style={{ transform: "rotate(-0.5deg)" }}>
-            <h1 className="font-serif" style={{ fontSize: "2rem", fontWeight: 700, marginBottom: 8, color: "#1A1A1A" }}>
-              Who are you?
+          <div className="scrap-card p-8 mb-4" style={{ transform: "rotate(-0.5deg)" }}>
+            <h1 className="font-serif" style={{ fontSize: "1.8rem", fontWeight: 700, marginBottom: 6, color: "#1A1A1A" }}>
+              Welcome to Wozzer
             </h1>
-            <p className="font-accent" style={{ color: "#6B6355", fontSize: "1rem", marginBottom: "1.5rem" }}>
-              Choose your path to earn a spot on Wozzer.
+            <p style={{ color: "#6B6355", fontFamily: "'Inter', sans-serif", fontSize: "0.9rem", lineHeight: 1.6, marginBottom: "1.25rem" }}>
+              You're in at <strong>Level 0</strong>. Complete your interview or first challenge to start showing up in people's decks.
             </p>
 
             {error && <p style={{ color: "#CC2200", marginBottom: "1rem", fontFamily: "'Caveat', cursive" }}>{error}</p>}
@@ -163,11 +188,11 @@ export default function Onboarding() {
                   transform: "rotate(-1deg)",
                 }}
               >
-                <div className="font-serif" style={{ fontSize: "1.4rem", fontWeight: 700, color: "#7B4F2E", marginBottom: 4 }}>
-                  Visionary
+                <div className="font-serif" style={{ fontSize: "1.3rem", fontWeight: 700, color: "#7B4F2E", marginBottom: 4 }}>
+                  I have an idea — Visionary
                 </div>
                 <div style={{ fontSize: "0.85rem", color: "#6B6355", fontFamily: "'Inter', sans-serif", lineHeight: 1.5 }}>
-                  You have the idea. Defend it against the AI inquisitor. Come with something real.
+                  You have the idea. Defend it against the AI. Come with something real — or get homework.
                 </div>
               </button>
 
@@ -185,12 +210,52 @@ export default function Onboarding() {
                   transform: "rotate(1deg)",
                 }}
               >
-                <div className="font-serif" style={{ fontSize: "1.4rem", fontWeight: 700, color: "#1A6B3A", marginBottom: 4 }}>
-                  Wozniak
+                <div className="font-serif" style={{ fontSize: "1.3rem", fontWeight: 700, color: "#1A6B3A", marginBottom: 4 }}>
+                  I can build things — Wozniak
                 </div>
                 <div style={{ fontSize: "0.85rem", color: "#6B6355", fontFamily: "'Inter', sans-serif", lineHeight: 1.5 }}>
-                  You build things. Pick your skills, solve a challenge, get your level — Beginner, Intermediate, or Advanced.
+                  Pick your skills, solve a challenge, get your level. Earn XP and Level 1 instantly.
                 </div>
+              </button>
+            </div>
+          </div>
+
+          <div style={{ textAlign: "center" }}>
+            <p className="font-accent" style={{ color: "#A09890", fontSize: "0.8rem", marginBottom: 6 }}>
+              Not ready? You can browse but your card won't appear in many decks.
+            </p>
+            <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
+              <button
+                onClick={() => handleSkip("visionary")}
+                disabled={isSkipping}
+                style={{
+                  background: "transparent",
+                  border: "1px dashed #C8BFA8",
+                  borderRadius: "2px",
+                  padding: "6px 14px",
+                  cursor: "pointer",
+                  color: "#A09890",
+                  fontFamily: "'Caveat', cursive",
+                  fontSize: "0.9rem",
+                }}
+              >
+                Skip as Visionary
+              </button>
+              <button
+                onClick={() => handleSkip("wozniak")}
+                disabled={isSkipping}
+                style={{
+                  background: "transparent",
+                  border: "1px dashed #C8BFA8",
+                  borderRadius: "2px",
+                  padding: "6px 14px",
+                  cursor: "pointer",
+                  color: "#A09890",
+                  fontFamily: "'Caveat', cursive",
+                  fontSize: "0.9rem",
+                }}
+              >
+                Skip as Wozniak
               </button>
             </div>
           </div>
@@ -199,7 +264,6 @@ export default function Onboarding() {
     );
   }
 
-  // Wozniak — skill selection
   if (selectedPath === "wozniak" && !challenge && !levelResult) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-6" style={{ background: "#F5F0E8" }}>
@@ -210,7 +274,7 @@ export default function Onboarding() {
               What do you build?
             </h2>
             <p className="font-accent" style={{ color: "#6B6355", marginBottom: "1.25rem", fontSize: "1rem" }}>
-              Pick your skills. We'll test one of them.
+              Pick your skills. We'll test one of them. +75 XP on completion.
             </p>
 
             <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "1.5rem" }}>
@@ -239,21 +303,29 @@ export default function Onboarding() {
 
             {error && <p style={{ color: "#CC2200", marginBottom: "1rem", fontFamily: "'Caveat', cursive" }}>{error}</p>}
 
-            <button
-              onClick={handleWozniakSkillsSubmit}
-              disabled={wozniakSkills.length === 0 || submitSkills.isPending}
-              className="btn-primary"
-              style={{ width: "100%", opacity: wozniakSkills.length === 0 ? 0.5 : 1 }}
-            >
-              {submitSkills.isPending ? "Generating challenge..." : "Get my challenge"}
-            </button>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button
+                onClick={handleWozniakSkillsSubmit}
+                disabled={wozniakSkills.length === 0 || submitSkills.isPending}
+                className="btn-primary"
+                style={{ flex: 1, opacity: wozniakSkills.length === 0 ? 0.5 : 1 }}
+              >
+                {submitSkills.isPending ? "Generating challenge..." : "Get my challenge"}
+              </button>
+              <button
+                onClick={() => setSelectedPath(null)}
+                className="btn-ghost"
+                style={{ flexShrink: 0 }}
+              >
+                Back
+              </button>
+            </div>
           </div>
         </div>
       </div>
     );
   }
 
-  // Wozniak — challenge
   if (challenge && !levelResult) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-6" style={{ background: "#F5F0E8" }}>
@@ -313,7 +385,6 @@ export default function Onboarding() {
     );
   }
 
-  // Wozniak — result
   if (levelResult) {
     const levelColors: Record<string, string> = {
       beginner: "#D8F0E0",
@@ -332,8 +403,11 @@ export default function Onboarding() {
             <h2 className="font-serif" style={{ fontSize: "2.2rem", fontWeight: 700, color: "#1A1A1A", textTransform: "capitalize" }}>
               {levelResult.level} Wozniak
             </h2>
-            <p style={{ color: "#6B6355", fontSize: "0.9rem", margin: "1rem 0 1.5rem", fontFamily: "'Inter', sans-serif", lineHeight: 1.6 }}>
+            <p style={{ color: "#6B6355", fontSize: "0.9rem", margin: "1rem 0 0.5rem", fontFamily: "'Inter', sans-serif", lineHeight: 1.6 }}>
               {levelResult.feedback}
+            </p>
+            <p className="font-accent" style={{ color: "#E8450A", fontSize: "0.9rem", marginBottom: "1rem" }}>
+              +75 XP · Level 1 unlocked
             </p>
             <p className="font-accent" style={{ color: "#E8450A", fontSize: "1rem" }}>Entering Wozzer...</p>
           </div>
@@ -342,7 +416,6 @@ export default function Onboarding() {
     );
   }
 
-  // Visionary — chat interview
   if (state?.phase === "interview") {
     return (
       <div
@@ -354,10 +427,10 @@ export default function Onboarding() {
           style={{ background: "#F5F0E8", borderBottom: "2px solid #1A1A1A" }}
         >
           <div className="font-accent" style={{ color: "#7B4F2E", fontSize: "1.1rem", fontWeight: 600 }}>
-            The Inquisition
+            The Interview
           </div>
           <span className="font-accent" style={{ color: "#6B6355", fontSize: "0.9rem", marginLeft: "auto" }}>
-            Visionary path
+            Visionary path · +75 XP on completion
           </span>
         </div>
 
@@ -417,7 +490,6 @@ export default function Onboarding() {
     );
   }
 
-  // Visionary — homework
   if (state?.phase === "homework") {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-6" style={{ background: "#F5F0E8" }}>
@@ -427,8 +499,11 @@ export default function Onboarding() {
             <h2 className="font-serif mt-4" style={{ fontSize: "1.6rem", fontWeight: 700, color: "#1A1A1A", marginBottom: 8 }}>
               Homework assigned
             </h2>
-            <p style={{ color: "#6B6355", fontSize: "0.9rem", fontFamily: "'Inter', sans-serif", lineHeight: 1.6, marginBottom: "1.25rem" }}>
-              Your idea has potential but needs more thought. Come back when you've worked through these:
+            <p style={{ color: "#6B6355", fontSize: "0.9rem", fontFamily: "'Inter', sans-serif", lineHeight: 1.6, marginBottom: "0.5rem" }}>
+              Your idea has potential. Work through these — your visibility will be low until you do.
+            </p>
+            <p style={{ color: "#A09890", fontSize: "0.85rem", fontFamily: "'Caveat', cursive", marginBottom: "1.25rem" }}>
+              (You can still enter and explore — just not widely visible yet)
             </p>
             <ol style={{ paddingLeft: "1.2rem", display: "flex", flexDirection: "column", gap: "10px", marginBottom: "1.5rem" }}>
               {state.homeworkQuestions?.map((q, i) => (
@@ -443,7 +518,7 @@ export default function Onboarding() {
               className="btn-primary"
               style={{ width: "100%" }}
             >
-              {completeMutation.isPending ? "..." : "I've thought it through"}
+              {completeMutation.isPending ? "..." : "I've thought it through — let me in"}
             </button>
           </div>
         </div>

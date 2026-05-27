@@ -13,6 +13,7 @@ import Feed from "@/pages/feed";
 import Profile from "@/pages/profile";
 import Settings from "@/pages/settings";
 import Discover from "@/pages/discover";
+import Certifications from "@/pages/certifications";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -20,7 +21,6 @@ const queryClient = new QueryClient({
   },
 });
 
-// Wire Supabase token into all API requests
 setAuthTokenGetter(() => getAccessToken());
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -68,6 +68,9 @@ function AppRoutes() {
         </Route>
         <Route path="/discover">
           {() => <ProtectedRoute component={Discover} />}
+        </Route>
+        <Route path="/certifications">
+          {() => <ProtectedRoute component={Certifications} />}
         </Route>
         <Route path="/profile/:username">
           {() => <ProtectedRoute component={Profile} />}

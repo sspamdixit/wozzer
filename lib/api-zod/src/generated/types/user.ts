@@ -27,4 +27,10 @@ export interface User {
   followersCount: number;
   followingCount: number;
   createdAt: string;
+  xpLevel: number;
+  xp: number;
+  streakCurrent: number;
+  streakLongest: number;
+  visibilityScore: number;
+  achievements?: string[];
 }

@@ -1,9 +1,10 @@
 import { Router, type IRouter } from "express";
-import { ne, notInArray, inArray, eq } from "drizzle-orm";
+import { ne, notInArray, inArray, eq, desc } from "drizzle-orm";
 import { db, usersTable, projectsTable, swipesTable } from "@workspace/db";
 import { requireAuth } from "../middlewares/requireAuth";
+import { awardXp, updateStreak } from "../lib/gamification";
 import crypto from "crypto";
-import { z } from "zod/v4";
+import { z } from "zod";
 
 const router: IRouter = Router();
 
@@ -11,33 +12,41 @@ router.get("/discover", requireAuth, async (req, res): Promise<void> => {
   const authReq = req as typeof req & { user: typeof usersTable.$inferSelect };
   const userId = authReq.user.id;
 
-  // Get already-swiped IDs
   const existingSwipes = await db.select().from(swipesTable).where(eq(swipesTable.userId, userId));
   const swipedPersonIds = existingSwipes.filter(s => s.targetType === "person").map(s => s.targetId);
   const swipedProjectIds = existingSwipes.filter(s => s.targetType === "project").map(s => s.targetId);
 
-  // Get candidate persons (exclude self + already swiped)
   const excludeUsers = [userId, ...swipedPersonIds];
-  const persons = await db
+  const allPersons = await db
     .select()
     .from(usersTable)
     .where(notInArray(usersTable.id, excludeUsers))
-    .limit(30);
+    .limit(60);
 
-  // Get candidate projects (exclude already swiped)
   const projectQuery = swipedProjectIds.length > 0
-    ? db.select().from(projectsTable).where(notInArray(projectsTable.id, swipedProjectIds)).limit(10)
-    : db.select().from(projectsTable).limit(10);
+    ? db.select().from(projectsTable).where(notInArray(projectsTable.id, swipedProjectIds)).limit(20)
+    : db.select().from(projectsTable).limit(20);
   const projects = await projectQuery;
 
-  // Build project author map
   const authorIds = [...new Set(projects.map(p => p.authorId))];
   const authors = authorIds.length > 0
     ? await db.select().from(usersTable).where(inArray(usersTable.id, authorIds))
     : [];
   const authorMap = new Map(authors.map(a => [a.id, a]));
 
-  // Build card deck: 3 person : 1 project ratio
+  const shuffleWithVisibility = <T extends { visibilityScore?: number }>(arr: T[]): T[] => {
+    const sorted = [...arr].sort((a, b) => (b.visibilityScore ?? 0) - (a.visibilityScore ?? 0));
+    const result: T[] = [];
+    while (sorted.length) {
+      const pick = Math.random() < 0.8 ? 0 : Math.floor(Math.random() * Math.min(3, sorted.length));
+      result.push(sorted.splice(pick, 1)[0]);
+    }
+    return result;
+  };
+
+  const personsWithScore = allPersons.map(u => ({ ...u, visibilityScore: u.visibilityScore ?? 0 }));
+  const persons = shuffleWithVisibility(personsWithScore).slice(0, 30);
+
   const personCards = persons.map(u => ({
     id: u.id,
     type: "person" as const,
@@ -55,6 +64,11 @@ router.get("/discover", requireAuth, async (req, res): Promise<void> => {
       followingCount: u.followingCount,
       createdAt: u.createdAt.toISOString(),
       matchScore: null,
+      xpLevel: u.xpLevel ?? 0,
+      xp: u.xp ?? 0,
+      streakCurrent: u.streakCurrent ?? 0,
+      streakLongest: u.streakLongest ?? 0,
+      visibilityScore: u.visibilityScore ?? 0,
     },
   }));
 
@@ -72,26 +86,26 @@ router.get("/discover", requireAuth, async (req, res): Promise<void> => {
         linkUrl: p.linkUrl ?? null,
         authorUsername: author?.username ?? "unknown",
         authorLevel: author?.level ?? null,
+        authorXpLevel: author?.xpLevel ?? 0,
+        authorStreakCurrent: author?.streakCurrent ?? 0,
       },
     };
   });
 
-  // Interleave: 3 persons + 1 project per group, shuffle within groups
-  const cards: typeof personCards[0][] = [];
+  const cards: (typeof personCards[0] | typeof projectCards[0])[] = [];
   let pi = 0;
   let pj = 0;
   const totalGroups = Math.max(Math.ceil(personCards.length / 3), Math.ceil(projectCards.length));
 
   for (let g = 0; g < totalGroups; g++) {
-    const group: typeof cards = [];
+    const group: (typeof personCards[0] | typeof projectCards[0])[] = [];
     for (let k = 0; k < 3 && pi < personCards.length; k++, pi++) {
       group.push(personCards[pi]);
     }
     if (pj < projectCards.length) {
-      group.push(projectCards[pj] as any);
+      group.push(projectCards[pj]);
       pj++;
     }
-    // Shuffle group
     for (let i = group.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [group[i], group[j]] = [group[j], group[i]];
@@ -122,6 +136,10 @@ router.post("/discover/swipe", requireAuth, async (req, res): Promise<void> => {
     targetType: parsed.data.targetType,
     direction: parsed.data.direction,
   });
+
+  if (parsed.data.direction === "right") {
+    await updateStreak(authReq.user.id);
+  }
 
   res.json({ success: true });
 });

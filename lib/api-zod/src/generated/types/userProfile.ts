@@ -27,4 +27,10 @@ export interface UserProfile {
   createdAt: string;
   /** @nullable */
   matchScore?: number | null;
+  xpLevel: number;
+  xp: number;
+  streakCurrent: number;
+  streakLongest: number;
+  visibilityScore: number;
+  achievements?: string[];
 }

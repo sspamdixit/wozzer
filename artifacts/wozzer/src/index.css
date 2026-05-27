@@ -254,6 +254,11 @@
   }
 }
 
+@keyframes flamePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
 @layer utilities {
   .font-serif { font-family: 'Fraunces', Georgia, serif !important; }
   .font-accent { font-family: 'Caveat', cursive !important; }

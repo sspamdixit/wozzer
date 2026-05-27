@@ -2,13 +2,16 @@ import { useRoute } from "wouter";
 import { Layout } from "@/components/layout";
 import { PostCard } from "@/components/post-card";
 import { RoleBadge } from "@/components/role-badge";
+import { LevelBadge } from "@/components/level-badge";
+import { StreakIndicator } from "@/components/streak-indicator";
+import { XpBar } from "@/components/xp-bar";
+import { AchievementBadges } from "@/components/achievement-badge";
 import {
   useGetUserProfile, useListUserPosts, useFollowUser, useUnfollowUser,
   useGetFollowStatus, getGetFollowStatusQueryKey, getGetUserProfileQueryKey,
 } from "@workspace/api-client-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
-import { formatDistanceToNow } from "date-fns";
 
 export default function Profile() {
   const [, params] = useRoute("/profile/:username");
@@ -57,10 +60,15 @@ export default function Profile() {
     );
   }
 
+  const xpLevel = profile.xpLevel ?? 0;
+  const xp = profile.xp ?? 0;
+  const streakCurrent = profile.streakCurrent ?? 0;
+  const streakLongest = profile.streakLongest ?? 0;
+  const achievements = (profile as any).achievements ?? [];
+
   return (
     <Layout>
       <div style={{ maxWidth: 600 }}>
-        {/* Profile header card */}
         <div style={{ padding: "1.5rem 1.25rem", borderBottom: "2px solid #1A1A1A", background: "#FDFAF4", position: "relative" }}>
           <div style={{ display: "flex", alignItems: "flex-start", gap: "1rem", marginBottom: "1rem" }}>
             <div
@@ -88,13 +96,17 @@ export default function Profile() {
             </div>
 
             <div style={{ flex: 1 }}>
-              <h1 className="font-serif" style={{ fontSize: "1.5rem", fontWeight: 700, color: "#1A1A1A", marginBottom: 2 }}>
+              <h1 className="font-serif" style={{ fontSize: "1.4rem", fontWeight: 700, color: "#1A1A1A", marginBottom: 2 }}>
                 {profile.displayName}
               </h1>
-              <p className="font-accent" style={{ color: "#6B6355", fontSize: "0.95rem", marginBottom: 6 }}>
+              <p className="font-accent" style={{ color: "#6B6355", fontSize: "0.9rem", marginBottom: 6 }}>
                 @{profile.username}
               </p>
-              <RoleBadge role={profile.role} level={profile.level ?? undefined} />
+              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                <RoleBadge role={profile.role} />
+                <LevelBadge xpLevel={xpLevel} role={profile.role} size="md" />
+                {streakCurrent > 2 && <StreakIndicator streak={streakCurrent} size="md" />}
+              </div>
             </div>
 
             {!isOwnProfile && (
@@ -153,7 +165,7 @@ export default function Profile() {
             </div>
           )}
 
-          <div style={{ display: "flex", gap: "1.25rem" }}>
+          <div style={{ display: "flex", gap: "1.25rem", marginBottom: "1rem" }}>
             <span className="font-accent" style={{ color: "#6B6355", fontSize: "0.9rem" }}>
               <strong style={{ color: "#1A1A1A", fontFamily: "'Fraunces', serif" }}>{profile.followersCount}</strong> followers
             </span>
@@ -161,9 +173,79 @@ export default function Profile() {
               <strong style={{ color: "#1A1A1A", fontFamily: "'Fraunces', serif" }}>{profile.followingCount}</strong> following
             </span>
           </div>
+
+          <div style={{ marginBottom: "1rem" }}>
+            <XpBar xp={xp} xpLevel={xpLevel} />
+          </div>
+
+          {streakCurrent > 0 && (
+            <div
+              style={{
+                display: "flex",
+                gap: "1.25rem",
+                marginBottom: "1rem",
+                padding: "8px 12px",
+                background: "#FFF8F0",
+                border: "1.5px solid #E8450A",
+                borderRadius: "3px",
+              }}
+            >
+              <div style={{ textAlign: "center" }}>
+                <div className="font-serif" style={{ fontSize: "1.2rem", fontWeight: 700, color: "#E8450A" }}>
+                  🔥 {streakCurrent}
+                </div>
+                <div className="font-accent" style={{ fontSize: "0.7rem", color: "#6B6355" }}>current streak</div>
+              </div>
+              <div style={{ textAlign: "center" }}>
+                <div className="font-serif" style={{ fontSize: "1.2rem", fontWeight: 700, color: "#1A1A1A" }}>
+                  {streakLongest}
+                </div>
+                <div className="font-accent" style={{ fontSize: "0.7rem", color: "#6B6355" }}>longest ever</div>
+              </div>
+              <div style={{ textAlign: "center" }}>
+                <div className="font-serif" style={{ fontSize: "1.2rem", fontWeight: 700, color: "#1A1A1A" }}>
+                  {xp}
+                </div>
+                <div className="font-accent" style={{ fontSize: "0.7rem", color: "#6B6355" }}>total XP</div>
+              </div>
+            </div>
+          )}
+
+          {isOwnProfile && (
+            <div
+              style={{
+                marginBottom: "1rem",
+                padding: "8px 12px",
+                background: "#F0EDE6",
+                border: "1px dashed #C8BFA8",
+                borderRadius: "3px",
+              }}
+            >
+              <div className="font-accent" style={{ fontSize: "0.75rem", color: "#6B6355" }}>
+                Visibility score (only you see this):{" "}
+                <strong style={{ color: "#1A1A1A" }}>
+                  {Math.round((profile.visibilityScore ?? 0) * 100)}%
+                </strong>
+                {" "}—{" "}
+                {(profile.visibilityScore ?? 0) < 0.2
+                  ? "low. Complete your profile + stay active to appear more often."
+                  : (profile.visibilityScore ?? 0) < 0.5
+                  ? "moderate. Keep building to climb the deck."
+                  : "strong. You're showing up well."}
+              </div>
+            </div>
+          )}
+
+          {achievements.length > 0 && (
+            <div style={{ marginBottom: "0.5rem" }}>
+              <p className="font-accent" style={{ fontSize: "0.8rem", color: "#6B6355", marginBottom: 8, fontWeight: 600 }}>
+                Achievements
+              </p>
+              <AchievementBadges achievements={achievements} />
+            </div>
+          )}
         </div>
 
-        {/* Posts */}
         {postsData?.posts.map(post => <PostCard key={post.id} post={post} />)}
 
         {postsData?.posts.length === 0 && (

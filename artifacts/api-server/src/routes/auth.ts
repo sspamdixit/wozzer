@@ -2,13 +2,17 @@ import { Router, type IRouter } from "express";
 import { eq } from "drizzle-orm";
 import { db, usersTable } from "@workspace/db";
 import { requireAuth } from "../middlewares/requireAuth";
-import { z } from "zod/v4";
+import { awardXp, updateStreak } from "../lib/gamification";
+import { z } from "zod";
 
 const router: IRouter = Router();
 
 router.get("/auth/me", requireAuth, async (req, res): Promise<void> => {
   const authReq = req as typeof req & { user: typeof usersTable.$inferSelect };
-  res.json(formatUser(authReq.user));
+  await awardXp(authReq.user.id, 10);
+  await updateStreak(authReq.user.id);
+  const [refreshed] = await db.select().from(usersTable).where(eq(usersTable.id, authReq.user.id));
+  res.json(formatUser(refreshed ?? authReq.user));
 });
 
 const SetUsernameBody = z.object({ username: z.string().min(3).max(30).regex(/^[a-z0-9_]+$/) });
@@ -50,6 +54,11 @@ export function formatUser(user: typeof usersTable.$inferSelect) {
     followersCount: user.followersCount,
     followingCount: user.followingCount,
     createdAt: user.createdAt.toISOString(),
+    xpLevel: user.xpLevel ?? 0,
+    xp: user.xp ?? 0,
+    streakCurrent: user.streakCurrent ?? 0,
+    streakLongest: user.streakLongest ?? 0,
+    visibilityScore: user.visibilityScore ?? 0,
   };
 }
 

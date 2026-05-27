@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
-import { useGetMe, User } from "@workspace/api-client-react";
+import { useGetMe, getGetMeQueryKey, User } from "@workspace/api-client-react";
 
 interface AuthContextType {
   user: User | null;
@@ -45,6 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const { data: user, isLoading: userLoading, refetch } = useGetMe({
     query: {
+      queryKey: getGetMeQueryKey(),
       enabled: !!session,
       retry: false,
     }
