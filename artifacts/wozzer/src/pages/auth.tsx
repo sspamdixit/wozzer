@@ -68,7 +68,7 @@ function OAuthButton({
         border: `1.5px solid ${INK}`,
         borderRadius: 3,
         boxShadow: `2px 2px 0 ${isGoogle ? INK : MUTED}`,
-        fontFamily: "'Caveat', cursive",
+        fontFamily: "'Ngaco', cursive",
         fontWeight: 600,
         fontSize: "1.1rem",
         cursor: disabled ? "not-allowed" : "pointer",
@@ -107,7 +107,7 @@ function Divider() {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "4px 0" }}>
       <div style={{ flex: 1, borderBottom: `1.5px solid ${BORDER}` }} />
-      <span style={{ fontFamily: "'Caveat', cursive", color: MUTED, fontSize: "1rem" }}>or</span>
+      <span style={{ fontFamily: "'Ngaco', cursive", color: MUTED, fontSize: "1rem" }}>or</span>
       <div style={{ flex: 1, borderBottom: `1.5px solid ${BORDER}` }} />
     </div>
   );
@@ -262,7 +262,7 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
           </h1>
           <p
             style={{
-              fontFamily: "'Caveat', cursive",
+              fontFamily: "'Ngaco', cursive",
               color: MUTED,
               fontSize: "1rem",
               marginBottom: 22,
@@ -305,12 +305,12 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
               />
 
               {success && (
-                <p style={{ color: "#1A6B3A", fontSize: "0.88rem", fontFamily: "'Caveat', cursive" }}>
+                <p style={{ color: "#1A6B3A", fontSize: "0.88rem", fontFamily: "'Ngaco', cursive" }}>
                   {success}
                 </p>
               )}
               {error && (
-                <p style={{ color: "#CC2200", fontSize: "0.88rem", fontFamily: "'Caveat', cursive" }}>
+                <p style={{ color: "#CC2200", fontSize: "0.88rem", fontFamily: "'Ngaco', cursive" }}>
                   {error}
                 </p>
               )}
@@ -331,7 +331,7 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
                   background: "none",
                   border: "none",
                   cursor: "pointer",
-                  fontFamily: "'Caveat', cursive",
+                  fontFamily: "'Ngaco', cursive",
                   fontSize: "0.95rem",
                   color: BRAND_ORANGE,
                   textAlign: "center",
@@ -358,7 +358,7 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
                 style={inputStyle}
               />
               {error && (
-                <p style={{ color: "#CC2200", fontSize: "0.88rem", fontFamily: "'Caveat', cursive" }}>
+                <p style={{ color: "#CC2200", fontSize: "0.88rem", fontFamily: "'Ngaco', cursive" }}>
                   {error}
                 </p>
               )}
@@ -377,7 +377,7 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
                   background: "none",
                   border: "none",
                   cursor: "pointer",
-                  fontFamily: "'Caveat', cursive",
+                  fontFamily: "'Ngaco', cursive",
                   fontSize: "0.95rem",
                   color: BRAND_ORANGE,
                   textAlign: "center",
@@ -394,7 +394,7 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
               onSubmit={handleVerifyOtp}
               style={{ display: "flex", flexDirection: "column", gap: 10 }}
             >
-              <p style={{ fontFamily: "'Caveat', cursive", color: MUTED, fontSize: "0.95rem", marginBottom: 2 }}>
+              <p style={{ fontFamily: "'Ngaco', cursive", color: MUTED, fontSize: "0.95rem", marginBottom: 2 }}>
                 Enter the code sent to {phone}
               </p>
               <input
@@ -413,7 +413,7 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
                 }}
               />
               {error && (
-                <p style={{ color: "#CC2200", fontSize: "0.88rem", fontFamily: "'Caveat', cursive" }}>
+                <p style={{ color: "#CC2200", fontSize: "0.88rem", fontFamily: "'Ngaco', cursive" }}>
                   {error}
                 </p>
               )}
@@ -432,7 +432,7 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
                   background: "none",
                   border: "none",
                   cursor: "pointer",
-                  fontFamily: "'Caveat', cursive",
+                  fontFamily: "'Ngaco', cursive",
                   fontSize: "0.95rem",
                   color: MUTED,
                   textAlign: "center",
@@ -449,7 +449,7 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
             style={{
               marginTop: 22,
               textAlign: "center",
-              fontFamily: "'Caveat', cursive",
+              fontFamily: "'Ngaco', cursive",
               color: MUTED,
               fontSize: "0.95rem",
             }}

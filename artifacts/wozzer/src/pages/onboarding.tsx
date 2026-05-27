@@ -171,7 +171,7 @@ export default function Onboarding() {
               You're in at <strong>Level 0</strong>. Complete your interview or first challenge to start showing up in people's decks.
             </p>
 
-            {error && <p style={{ color: "#CC2200", marginBottom: "1rem", fontFamily: "'Caveat', cursive" }}>{error}</p>}
+            {error && <p style={{ color: "#CC2200", marginBottom: "1rem", fontFamily: "'Ngaco', cursive" }}>{error}</p>}
 
             <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
               <button
@@ -235,7 +235,7 @@ export default function Onboarding() {
                   padding: "6px 14px",
                   cursor: "pointer",
                   color: "#A09890",
-                  fontFamily: "'Caveat', cursive",
+                  fontFamily: "'Ngaco', cursive",
                   fontSize: "0.9rem",
                 }}
               >
@@ -251,7 +251,7 @@ export default function Onboarding() {
                   padding: "6px 14px",
                   cursor: "pointer",
                   color: "#A09890",
-                  fontFamily: "'Caveat', cursive",
+                  fontFamily: "'Ngaco', cursive",
                   fontSize: "0.9rem",
                 }}
               >
@@ -301,7 +301,7 @@ export default function Onboarding() {
               ))}
             </div>
 
-            {error && <p style={{ color: "#CC2200", marginBottom: "1rem", fontFamily: "'Caveat', cursive" }}>{error}</p>}
+            {error && <p style={{ color: "#CC2200", marginBottom: "1rem", fontFamily: "'Ngaco', cursive" }}>{error}</p>}
 
             <div style={{ display: "flex", gap: 8 }}>
               <button
@@ -370,7 +370,7 @@ export default function Onboarding() {
               value={challengeAnswer}
               onChange={e => setChallengeAnswer(e.target.value)}
             />
-            {error && <p style={{ color: "#CC2200", marginBottom: "1rem", fontFamily: "'Caveat', cursive" }}>{error}</p>}
+            {error && <p style={{ color: "#CC2200", marginBottom: "1rem", fontFamily: "'Ngaco', cursive" }}>{error}</p>}
             <button
               onClick={handleChallengeSubmit}
               disabled={!challengeAnswer.trim() || submitChallenge.isPending}
@@ -502,7 +502,7 @@ export default function Onboarding() {
             <p style={{ color: "#6B6355", fontSize: "0.9rem", fontFamily: "'Inter', sans-serif", lineHeight: 1.6, marginBottom: "0.5rem" }}>
               Your idea has potential. Work through these — your visibility will be low until you do.
             </p>
-            <p style={{ color: "#A09890", fontSize: "0.85rem", fontFamily: "'Caveat', cursive", marginBottom: "1.25rem" }}>
+            <p style={{ color: "#A09890", fontSize: "0.85rem", fontFamily: "'Ngaco', cursive", marginBottom: "1.25rem" }}>
               (You can still enter and explore — just not widely visible yet)
             </p>
             <ol style={{ paddingLeft: "1.2rem", display: "flex", flexDirection: "column", gap: "10px", marginBottom: "1.5rem" }}>

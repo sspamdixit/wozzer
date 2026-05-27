@@ -58,7 +58,7 @@ export default function Settings() {
   };
 
   const labelStyle: React.CSSProperties = {
-    fontFamily: "'Caveat', cursive",
+    fontFamily: "'Ngaco', cursive",
     fontSize: "1rem",
     fontWeight: 600,
     color: "#6B6355",

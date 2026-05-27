@@ -71,7 +71,7 @@ function PersonCard({ card }: { card: NonNullable<DiscoverCard["person"]> }) {
       )}
 
       {!card.bio && isLevel0 && (
-        <p style={{ color: "#C8BFA8", fontSize: "0.8rem", fontFamily: "'Caveat', cursive", fontStyle: "italic" }}>
+        <p style={{ color: "#C8BFA8", fontSize: "0.8rem", fontFamily: "'Ngaco', cursive", fontStyle: "italic" }}>
           No bio yet — just getting started
         </p>
       )}

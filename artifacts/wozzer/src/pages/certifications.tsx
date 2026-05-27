@@ -182,7 +182,7 @@ export default function Certifications() {
             ))}
           </div>
 
-          {error && <p style={{ color: "#CC2200", margin: "1rem 0", fontFamily: "'Caveat', cursive" }}>{error}</p>}
+          {error && <p style={{ color: "#CC2200", margin: "1rem 0", fontFamily: "'Ngaco', cursive" }}>{error}</p>}
 
           <button
             onClick={submitQuiz}
@@ -248,7 +248,7 @@ export default function Certifications() {
           Earn verified badges. Get XP. Show off what you actually know.
         </p>
 
-        {error && <p style={{ color: "#CC2200", margin: "0 0 1rem", fontFamily: "'Caveat', cursive" }}>{error}</p>}
+        {error && <p style={{ color: "#CC2200", margin: "0 0 1rem", fontFamily: "'Ngaco', cursive" }}>{error}</p>}
 
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           {TRACKS.map((track, i) => {

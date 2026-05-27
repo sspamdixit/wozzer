@@ -18,7 +18,7 @@ export function Layout({ children }: { children: ReactNode }) {
       href={href}
       className="flex items-center gap-3 px-4 py-2.5 rounded-sm transition-all"
       style={{
-        fontFamily: "'Caveat', cursive",
+        fontFamily: "'Ngaco', cursive",
         fontSize: "1.1rem",
         fontWeight: 600,
         color: isActive(href) ? "#E8450A" : "#6B6355",
@@ -43,7 +43,7 @@ export function Layout({ children }: { children: ReactNode }) {
         </span>
         <Link
           href="/discover"
-          style={{ fontFamily: "'Caveat', cursive", fontSize: "0.9rem", color: "#E8450A", fontWeight: 600, textDecoration: "none" }}
+          style={{ fontFamily: "'Ngaco', cursive", fontSize: "0.9rem", color: "#E8450A", fontWeight: 600, textDecoration: "none" }}
         >
           Discover
         </Link>
@@ -69,7 +69,7 @@ export function Layout({ children }: { children: ReactNode }) {
           <button
             onClick={signOut}
             className="flex items-center gap-2 w-full"
-            style={{ fontFamily: "'Caveat', cursive", fontSize: "1rem", color: "#6B6355", background: "none", border: "none", cursor: "pointer", fontWeight: 600 }}
+            style={{ fontFamily: "'Ngaco', cursive", fontSize: "1rem", color: "#6B6355", background: "none", border: "none", cursor: "pointer", fontWeight: 600 }}
           >
             <LogOut size={16} />
             Sign out
