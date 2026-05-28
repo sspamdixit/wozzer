@@ -122,7 +122,7 @@ function CountryPicker({ selected, onChange }: { selected: Country; onChange: (c
             {filtered.length === 0 && <div style={{ padding: 12, color: "#A8A29E", fontSize: "0.85rem", textAlign: "center" }}>No results</div>}
             {filtered.map(c => (
               <button key={c.code} type="button" onClick={() => { onChange(c); setOpen(false); setQuery(""); }}
-                style={{ width: "100%", display: "flex", alignItems: "center", gap: 9, padding: "8px 12px", background: c.code === selected.code ? "#FFF0EB" : "transparent", border: "none", cursor: "pointer", textAlign: "left", borderBottom: "1px solid #F5EDE0" }}>
+                style={{ width: "100%", display: "flex", alignItems: "center", gap: 9, padding: "8px 12px", background: c.code === selected.code ? "#F3EEFF" : "transparent", border: "none", cursor: "pointer", textAlign: "left", borderBottom: "1px solid #F5EDE0" }}>
                 <span style={{ fontSize: "1.05rem", flexShrink: 0 }}>{c.flag}</span>
                 <span style={{ flex: 1, fontFamily: "'Inter'", fontSize: "0.83rem", color: "#1C1917" }}>{c.name}</span>
                 <span style={{ fontFamily: "'Inter'", fontSize: "0.78rem", color: "#78716C", flexShrink: 0 }}>{c.dial}</span>
@@ -202,8 +202,8 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
     outline: "none", boxSizing: "border-box", transition: "border-color 0.15s, box-shadow 0.15s",
   };
   const onFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-    e.currentTarget.style.borderColor = "#FF5A1F";
-    e.currentTarget.style.boxShadow = "0 0 0 3px rgba(255,90,31,0.12)";
+    e.currentTarget.style.borderColor = "#7C3AED";
+    e.currentTarget.style.boxShadow = "0 0 0 3px rgba(124,58,237,0.12)";
   };
   const onBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     e.currentTarget.style.borderColor = "#E4D8C8";
@@ -254,7 +254,7 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
 
         {/* Logo */}
         <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 24 }}>
-          <div style={{ width: 36, height: 36, background: "#FF5A1F", border: "2px solid #1C1917", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: "1.05rem", color: "#fff", boxShadow: "2px 2px 0 #1C1917", flexShrink: 0 }}>W</div>
+          <div style={{ width: 36, height: 36, background: "#7C3AED", border: "2px solid #1C1917", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: "1.05rem", color: "#fff", boxShadow: "2px 2px 0 #1C1917", flexShrink: 0 }}>W</div>
           <span style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: "1.2rem", color: "#1C1917" }}>Wozzer</span>
         </div>
 
@@ -327,8 +327,8 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
 
         <p style={{ marginTop: 18, textAlign: "center", fontFamily: "'Inter'", color: "#A8A29E", fontSize: "0.88rem" }}>
           {isSignUp
-            ? <> Already have an account? <a href="/sign-in" style={{ color: "#FF5A1F", fontWeight: 700, textDecoration: "none" }}>Sign in</a></>
-            : <> New to Wozzer? <a href="/sign-up" style={{ color: "#FF5A1F", fontWeight: 700, textDecoration: "none" }}>Apply now</a></>
+            ? <> Already have an account? <a href="/sign-in" style={{ color: "#7C3AED", fontWeight: 700, textDecoration: "none" }}>Sign in</a></>
+            : <> New to Wozzer? <a href="/sign-up" style={{ color: "#7C3AED", fontWeight: 700, textDecoration: "none" }}>Apply now</a></>
           }
         </p>
       </div>

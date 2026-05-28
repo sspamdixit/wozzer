@@ -55,10 +55,10 @@
   --border:       #E4D8C8;
   --border-soft:  #F0E8DC;
 
-  --orange:       #FF5A1F;
-  --orange-hover: #E8450A;
-  --orange-dim:   #FFF0EB;
-  --orange-mid:   #FFD6C4;
+  --orange:       #7C3AED;
+  --orange-hover: #6D28D9;
+  --orange-dim:   #F3EEFF;
+  --orange-mid:   #DDD6FE;
 
   --green:        #58CC02;
   --green-dim:    #EDFCE8;
@@ -80,7 +80,7 @@
   --subtle:       #A8A29E;
 
   /* ── Washi colors ─────────────────────────── */
-  --washi-orange: #FF5A1F;
+  --washi-orange: #7C3AED;
   --washi-green:  #58CC02;
   --washi-blue:   #1CB0F6;
   --washi-yellow: #FFC800;
@@ -321,7 +321,7 @@
     border: 1.5px solid var(--border);
   }
   .xp-bar-fill {
-    background: linear-gradient(90deg, var(--orange), #FF8C55);
+    background: linear-gradient(90deg, var(--orange), #A78BFA);
     height: 100%;
     border-radius: 999px;
     transition: width 0.6s ease;

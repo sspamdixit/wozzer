@@ -137,7 +137,7 @@ export default function Onboarding() {
         <div style={{ maxWidth: 440, width: "100%" }}>
 
           <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 32 }}>
-            <div style={{ width: 34, height: 34, background: "#FF5A1F", border: "2px solid #1C1917", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: "1rem", color: "#fff", boxShadow: "2px 2px 0 #1C1917" }}>W</div>
+            <div style={{ width: 34, height: 34, background: "#7C3AED", border: "2px solid #1C1917", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: "1rem", color: "#fff", boxShadow: "2px 2px 0 #1C1917" }}>W</div>
             <span style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: "1.2rem", color: "#1C1917" }}>Wozzer</span>
           </div>
 
@@ -155,7 +155,7 @@ export default function Onboarding() {
             {/* Visionary */}
             <button onClick={() => handleStartPath("visionary")} disabled={startOnboarding.isPending}
               style={{ ...card, textAlign: "left", cursor: "pointer", border: "1.5px solid #E4D8C8", transition: "border-color 0.15s, box-shadow 0.15s", padding: "18px 20px" }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = "#FF5A1F"; e.currentTarget.style.boxShadow = "0 4px 16px rgba(255,90,31,0.12)"; }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = "#7C3AED"; e.currentTarget.style.boxShadow = "0 4px 16px rgba(124,58,237,0.12)"; }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = "#E4D8C8"; e.currentTarget.style.boxShadow = "0 4px 20px rgba(28,25,23,0.07)"; }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 6 }}>
@@ -249,7 +249,7 @@ export default function Onboarding() {
             </div>
             <textarea style={{ ...F, minHeight: 160, resize: "vertical", marginBottom: 14, lineHeight: 1.6 } as React.CSSProperties}
               placeholder="Your answer…" value={challengeAnswer} onChange={e => setChallengeAnswer(e.target.value)}
-              onFocus={e => { e.currentTarget.style.borderColor = "#FF5A1F"; }}
+              onFocus={e => { e.currentTarget.style.borderColor = "#7C3AED"; }}
               onBlur={e => { e.currentTarget.style.borderColor = "#E4D8C8"; }}
             />
             {error && <p style={{ color: "#FF4B4B", fontSize: "0.85rem", fontFamily: "'Inter'", marginBottom: 12 }}>{error}</p>}
@@ -277,7 +277,7 @@ export default function Onboarding() {
             <div style={{ fontSize: "2.5rem", marginBottom: 14 }}>{cfg.emoji}</div>
             <span className={`sticker ${cfg.cls}`} style={{ marginBottom: 10, display: "inline-flex" }}>{cfg.label}</span>
             <p style={{ fontFamily: "'Inter'", color: "#78716C", fontSize: "0.9rem", lineHeight: 1.6, marginBottom: 16, marginTop: 10 }}>{levelResult.feedback}</p>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, fontFamily: "'Inter'", fontSize: "0.88rem", fontWeight: 700, color: "#FF5A1F" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, fontFamily: "'Inter'", fontSize: "0.88rem", fontWeight: 700, color: "#7C3AED" }}>
               <Zap size={14} /> +75 XP · Level 1 unlocked
             </div>
             <p style={{ marginTop: 16, fontFamily: "'Inter'", color: "#A8A29E", fontSize: "0.8rem" }}>Taking you in…</p>
@@ -322,11 +322,11 @@ export default function Onboarding() {
           {error && <p style={{ color: "#FF4B4B", fontSize: "0.82rem", fontFamily: "'Inter'" }}>{error}</p>}
           <input value={chatInput} onChange={e => setChatInput(e.target.value)} placeholder="Defend your idea…" disabled={chatMutation.isPending}
             style={{ ...F, flex: 1 }}
-            onFocus={e => { e.currentTarget.style.borderColor = "#FF5A1F"; }}
+            onFocus={e => { e.currentTarget.style.borderColor = "#7C3AED"; }}
             onBlur={e => { e.currentTarget.style.borderColor = "#E4D8C8"; }}
           />
           <button type="submit" disabled={!chatInput.trim() || chatMutation.isPending}
-            style={{ background: "#FF5A1F", border: "none", borderRadius: 10, padding: "0 16px", cursor: "pointer", color: "#fff", opacity: !chatInput.trim() ? 0.4 : 1, display: "flex", alignItems: "center", boxShadow: "0 3px 0 #E8450A" }}>
+            style={{ background: "#7C3AED", border: "none", borderRadius: 10, padding: "0 16px", cursor: "pointer", color: "#fff", opacity: !chatInput.trim() ? 0.4 : 1, display: "flex", alignItems: "center", boxShadow: "0 3px 0 #6D28D9" }}>
             <Send size={16} />
           </button>
         </form>

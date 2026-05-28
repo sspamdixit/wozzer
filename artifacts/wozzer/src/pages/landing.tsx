@@ -116,7 +116,7 @@ function CountryPicker({ selected, onChange }: { selected: Country; onChange: (c
           <div style={{ overflowY: "auto", flex: 1 }}>
             {filtered.map(c => (
               <button key={c.code} type="button" onClick={() => { onChange(c); setOpen(false); setQuery(""); }}
-                style={{ width: "100%", display: "flex", alignItems: "center", gap: 8, padding: "7px 12px", background: c.code === selected.code ? "#FFF0EB" : "transparent", border: "none", cursor: "pointer", textAlign: "left", borderBottom: "1px solid #F5EDE0" }}>
+                style={{ width: "100%", display: "flex", alignItems: "center", gap: 8, padding: "7px 12px", background: c.code === selected.code ? "#F3EEFF" : "transparent", border: "none", cursor: "pointer", textAlign: "left", borderBottom: "1px solid #F5EDE0" }}>
                 <span style={{ fontSize: "1.05rem" }}>{c.flag}</span>
                 <span style={{ flex: 1, fontFamily: "'Inter'", fontSize: "0.82rem", color: "#1C1917" }}>{c.name}</span>
                 <span style={{ fontFamily: "'Inter'", fontSize: "0.77rem", color: "#78716C" }}>{c.dial}</span>
@@ -173,7 +173,7 @@ export default function Landing() {
     fontFamily: "'Inter'", fontSize: "0.93rem", color: "#1C1917",
     outline: "none", boxSizing: "border-box", transition: "border-color 0.15s",
   };
-  const onFocus = (e: React.FocusEvent<HTMLInputElement>) => { e.currentTarget.style.borderColor = "#FF5A1F"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(255,90,31,0.1)"; };
+  const onFocus = (e: React.FocusEvent<HTMLInputElement>) => { e.currentTarget.style.borderColor = "#7C3AED"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(124,58,237,0.1)"; };
   const onBlur  = (e: React.FocusEvent<HTMLInputElement>) => { e.currentTarget.style.borderColor = "#E4D8C8"; e.currentTarget.style.boxShadow = "none"; };
 
   const handleEmail = async (e: React.FormEvent) => {
@@ -299,8 +299,8 @@ export default function Landing() {
       {/* Toggle sign in / sign up */}
       <p style={{ marginTop: 16, textAlign: "center", fontFamily: "'Inter'", color: "#A8A29E", fontSize: "0.86rem" }}>
         {isSignUp
-          ? <>Already have an account?{" "}<button onClick={() => { setMode("sign-in"); setError(""); setSuccess(""); }} style={{ background: "none", border: "none", cursor: "pointer", color: "#FF5A1F", fontWeight: 700, fontFamily: "'Inter'", fontSize: "0.86rem", padding: 0 }}>Sign in</button></>
-          : <>New to Wozzer?{" "}<button onClick={() => { setMode("sign-up"); setError(""); setSuccess(""); }} style={{ background: "none", border: "none", cursor: "pointer", color: "#FF5A1F", fontWeight: 700, fontFamily: "'Inter'", fontSize: "0.86rem", padding: 0 }}>Apply now</button></>
+          ? <>Already have an account?{" "}<button onClick={() => { setMode("sign-in"); setError(""); setSuccess(""); }} style={{ background: "none", border: "none", cursor: "pointer", color: "#7C3AED", fontWeight: 700, fontFamily: "'Inter'", fontSize: "0.86rem", padding: 0 }}>Sign in</button></>
+          : <>New to Wozzer?{" "}<button onClick={() => { setMode("sign-up"); setError(""); setSuccess(""); }} style={{ background: "none", border: "none", cursor: "pointer", color: "#7C3AED", fontWeight: 700, fontFamily: "'Inter'", fontSize: "0.86rem", padding: 0 }}>Apply now</button></>
         }
       </p>
     </div>
@@ -312,7 +312,7 @@ export default function Landing() {
       <div style={{
         position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)",
         width: 96, height: 22, borderRadius: 3, zIndex: 10,
-        background: "repeating-linear-gradient(90deg, #FF5A1F 0px, #FF5A1F 6px, rgba(255,255,255,0.35) 6px, rgba(255,255,255,0.35) 8px)",
+        background: "repeating-linear-gradient(90deg, #7C3AED 0px, #7C3AED 6px, rgba(255,255,255,0.35) 6px, rgba(255,255,255,0.35) 8px)",
         opacity: 0.9,
       }} />
 
@@ -333,7 +333,7 @@ export default function Landing() {
           fontSize: withAuth ? "clamp(1.9rem, 4vw, 2.4rem)" : "clamp(2.4rem, 5vw, 3.2rem)",
           lineHeight: 1.08, color: "#1C1917", marginBottom: 12, marginTop: 8,
         }}>
-          Find your<br /><span style={{ color: "#FF5A1F" }}>co-founder.</span>
+          Find your<br /><span style={{ color: "#7C3AED" }}>co-founder.</span>
         </h1>
 
         <p style={{
@@ -381,7 +381,7 @@ export default function Landing() {
       <div style={{ minHeight: "100svh", background: "#FFFCF7", display: "flex", flexDirection: "column" }}>
         {/* Top bar */}
         <div style={{ display: "flex", alignItems: "center", gap: 9, padding: "20px 40px", borderBottom: "1.5px solid #EDE6D8" }}>
-          <div style={{ width: 34, height: 34, background: "#FF5A1F", border: "2px solid #1C1917", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: "1rem", color: "#fff", boxShadow: "2px 2px 0 #1C1917" }}>W</div>
+          <div style={{ width: 34, height: 34, background: "#7C3AED", border: "2px solid #1C1917", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: "1rem", color: "#fff", boxShadow: "2px 2px 0 #1C1917" }}>W</div>
           <span style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: "1.2rem", color: "#1C1917" }}>Wozzer</span>
         </div>
 
@@ -413,7 +413,7 @@ export default function Landing() {
     <div style={{ minHeight: "100svh", background: "#FFFCF7", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "28px 16px" }}>
       {/* Logo */}
       <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 24, alignSelf: "flex-start" }}>
-        <div style={{ width: 34, height: 34, background: "#FF5A1F", border: "2px solid #1C1917", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: "1rem", color: "#fff", boxShadow: "2px 2px 0 #1C1917" }}>W</div>
+        <div style={{ width: 34, height: 34, background: "#7C3AED", border: "2px solid #1C1917", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: "1rem", color: "#fff", boxShadow: "2px 2px 0 #1C1917" }}>W</div>
         <span style={{ fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: "1.2rem", color: "#1C1917" }}>Wozzer</span>
       </div>
 

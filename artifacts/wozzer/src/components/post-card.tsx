@@ -83,7 +83,7 @@ export function PostCard({ post }: { post: Post }) {
                 boxShadow: "2px 2px 0 #C8BFA8",
               }}
             >
-              <div className="font-accent" style={{ color: "#E8450A", fontWeight: 600, marginBottom: 2 }}>{post.linkTitle || post.linkUrl}</div>
+              <div className="font-accent" style={{ color: "#6D28D9", fontWeight: 600, marginBottom: 2 }}>{post.linkTitle || post.linkUrl}</div>
               <div style={{ fontSize: "0.78rem", color: "#6B6355", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontFamily: "'Inter', sans-serif" }}>{post.linkUrl}</div>
             </a>
           )}

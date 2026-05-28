@@ -220,7 +220,7 @@ export default function Certifications() {
               {result.feedback}
             </p>
             {result.xpAwarded > 0 && (
-              <p className="font-accent" style={{ color: "#E8450A", fontSize: "1rem", fontWeight: 700 }}>
+              <p className="font-accent" style={{ color: "#6D28D9", fontSize: "1rem", fontWeight: 700 }}>
                 +{result.xpAwarded} XP earned
               </p>
             )}
@@ -314,7 +314,7 @@ export default function Certifications() {
                           {l}
                         </span>
                       ))}
-                      <span className="font-accent" style={{ fontSize: "0.7rem", color: "#E8450A", fontWeight: 700 }}>
+                      <span className="font-accent" style={{ fontSize: "0.7rem", color: "#6D28D9", fontWeight: 700 }}>
                         +{track.xpReward} XP
                       </span>
                     </div>

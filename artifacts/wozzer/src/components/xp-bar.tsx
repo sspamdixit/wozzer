@@ -60,7 +60,7 @@ export function XpBar({ xp, xpLevel }: XpBarProps) {
             position: "absolute",
             inset: 0,
             width: `${pct * 100}%`,
-            background: "#E8450A",
+            background: "#6D28D9",
             borderRight: pct < 1 ? "1.5px solid #1A1A1A" : "none",
             transition: "width 0.6s ease-out",
             backgroundImage: "repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(255,255,255,0.15) 4px, rgba(255,255,255,0.15) 8px)",

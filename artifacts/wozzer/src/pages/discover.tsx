@@ -395,7 +395,7 @@ export default function Discover() {
                   style={{
                     width: 64,
                     height: 64,
-                    background: "#E8450A",
+                    background: "#6D28D9",
                     border: "2px solid #1A1A1A",
                     boxShadow: "3px 3px 0 #1A1A1A",
                     borderRadius: "50%",

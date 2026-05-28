@@ -20,11 +20,11 @@ export function Layout({ children }: { children: ReactNode }) {
     href: string; icon: ReactNode; label: string; primary?: boolean;
   }) => (
     <Link href={href} style={{ textDecoration: "none", width: "100%" }}>
-      <div className={`nav-item${isActive(href) ? " active" : ""}`} style={primary && !isActive(href) ? { color: "#FF5A1F", background: "#FFF0EB" } : {}}>
+      <div className={`nav-item${isActive(href) ? " active" : ""}`} style={primary && !isActive(href) ? { color: "#7C3AED", background: "#F3EEFF" } : {}}>
         {icon}
         <span className="hidden md:inline">{label}</span>
         {primary && !isActive(href) && (
-          <span className="hidden md:inline" style={{ marginLeft: "auto", background: "#FF5A1F", color: "#fff", fontFamily: "'Inter'", fontSize: "0.68rem", fontWeight: 700, padding: "1px 7px", borderRadius: 999 }}>
+          <span className="hidden md:inline" style={{ marginLeft: "auto", background: "#7C3AED", color: "#fff", fontFamily: "'Inter'", fontSize: "0.68rem", fontWeight: 700, padding: "1px 7px", borderRadius: 999 }}>
             SWIPE
           </span>
         )}
@@ -51,7 +51,7 @@ export function Layout({ children }: { children: ReactNode }) {
             </span>
           )}
           {user?.xp !== undefined && (
-            <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.82rem", fontWeight: 700, color: "#FF5A1F", display: "flex", alignItems: "center", gap: 3 }}>
+            <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.82rem", fontWeight: 700, color: "#7C3AED", display: "flex", alignItems: "center", gap: 3 }}>
               <Zap size={13} />
               {user.xp}
             </span>
@@ -74,7 +74,7 @@ export function Layout({ children }: { children: ReactNode }) {
         >
           {/* Desktop logo */}
           <div className="hidden md:flex items-center gap-2.5 mb-6 px-2">
-            <div style={{ width: 32, height: 32, background: "#FF5A1F", border: "2px solid #1C1917", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: "1rem", color: "#fff", flexShrink: 0, boxShadow: "2px 2px 0 #1C1917" }}>
+            <div style={{ width: 32, height: 32, background: "#7C3AED", border: "2px solid #1C1917", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: "1rem", color: "#fff", flexShrink: 0, boxShadow: "2px 2px 0 #1C1917" }}>
               W
             </div>
             <span style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 700, fontSize: "1.25rem", color: "#1C1917" }}>Wozzer</span>

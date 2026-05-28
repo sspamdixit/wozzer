@@ -15,8 +15,8 @@ export function StreakIndicator({ streak, size = "md" }: StreakIndicatorProps) {
     lg: { fontSize: "1rem", gap: 5 },
   };
 
-  const flameColor = isLegend ? "#FF6B00" : isConsistent ? "#E8450A" : "#E8450A";
-  const labelColor = isLegend ? "#FF6B00" : "#E8450A";
+  const flameColor = isLegend ? "#FF6B00" : isConsistent ? "#6D28D9" : "#6D28D9";
+  const labelColor = isLegend ? "#FF6B00" : "#6D28D9";
 
   return (
     <span

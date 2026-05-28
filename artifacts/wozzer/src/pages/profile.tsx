@@ -157,7 +157,7 @@ export default function Profile() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="font-accent"
-                  style={{ color: "#E8450A", fontSize: "0.9rem", display: "block", marginBottom: 2 }}
+                  style={{ color: "#6D28D9", fontSize: "0.9rem", display: "block", marginBottom: 2 }}
                 >
                   {link}
                 </a>
@@ -186,12 +186,12 @@ export default function Profile() {
                 marginBottom: "1rem",
                 padding: "8px 12px",
                 background: "#FFF8F0",
-                border: "1.5px solid #E8450A",
+                border: "1.5px solid #6D28D9",
                 borderRadius: "3px",
               }}
             >
               <div style={{ textAlign: "center" }}>
-                <div className="font-serif" style={{ fontSize: "1.2rem", fontWeight: 700, color: "#E8450A" }}>
+                <div className="font-serif" style={{ fontSize: "1.2rem", fontWeight: 700, color: "#6D28D9" }}>
                   🔥 {streakCurrent}
                 </div>
                 <div className="font-accent" style={{ fontSize: "0.7rem", color: "#6B6355" }}>current streak</div>
