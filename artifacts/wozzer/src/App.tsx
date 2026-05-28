@@ -14,6 +14,7 @@ import Profile from "@/pages/profile";
 import Settings from "@/pages/settings";
 import Discover from "@/pages/discover";
 import Certifications from "@/pages/certifications";
+import Messages from "@/pages/messages";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -37,7 +38,7 @@ function ProtectedRoute({ component: Component, requireOnboarding = true }: { co
     }
   }, [user, session, isLoading, setLocation, requireOnboarding]);
 
-  if (isLoading) return <div style={{ minHeight: "100dvh", background: "#F5F0E8" }} />;
+  if (isLoading) return <div style={{ minHeight: "100dvh", background: "#FFFCF7" }} />;
   if (!session) return null;
   if (requireOnboarding && user && !user.onboardingComplete) return null;
 
@@ -47,9 +48,9 @@ function ProtectedRoute({ component: Component, requireOnboarding = true }: { co
 function HomeRedirect() {
   const { user, session, isLoading } = useAuth();
 
-  if (isLoading) return <div style={{ minHeight: "100dvh", background: "#F5F0E8" }} />;
+  if (isLoading) return <div style={{ minHeight: "100dvh", background: "#FFFCF7" }} />;
   if (!session) return <Landing />;
-  if (user?.onboardingComplete) return <Redirect to="/feed" />;
+  if (user?.onboardingComplete) return <Redirect to="/discover" />;
   return <Redirect to="/onboarding" />;
 }
 
@@ -71,6 +72,9 @@ function AppRoutes() {
         </Route>
         <Route path="/certifications">
           {() => <ProtectedRoute component={Certifications} />}
+        </Route>
+        <Route path="/messages">
+          {() => <ProtectedRoute component={Messages} />}
         </Route>
         <Route path="/profile/:username">
           {() => <ProtectedRoute component={Profile} />}

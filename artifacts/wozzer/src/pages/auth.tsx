@@ -6,12 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 type AuthMode = "sign-in" | "sign-up";
 type InputMode = "email" | "phone";
 
-interface Country {
-  name: string;
-  code: string;
-  dial: string;
-  flag: string;
-}
+interface Country { name: string; code: string; dial: string; flag: string; }
 
 const COUNTRIES: Country[] = [
   { name: "Afghanistan", code: "AF", dial: "+93", flag: "🇦🇫" },
@@ -83,10 +78,7 @@ function CountryPicker({ selected, onChange }: { selected: Country; onChange: (c
   const [query, setQuery] = useState("");
   const ref = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
-
-  const filtered = query.trim()
-    ? COUNTRIES.filter(c => c.name.toLowerCase().includes(query.toLowerCase()) || c.dial.includes(query))
-    : COUNTRIES;
+  const filtered = query.trim() ? COUNTRIES.filter(c => c.name.toLowerCase().includes(query.toLowerCase()) || c.dial.includes(query)) : COUNTRIES;
 
   useEffect(() => { if (open) setTimeout(() => searchRef.current?.focus(), 40); }, [open]);
   useEffect(() => {
@@ -101,52 +93,30 @@ function CountryPicker({ selected, onChange }: { selected: Country; onChange: (c
         type="button"
         onClick={() => { setOpen(o => !o); setQuery(""); }}
         style={{
-          display: "flex", alignItems: "center", gap: 5,
-          padding: "0 12px", height: "100%",
-          background: "#1E1E23", border: "1px solid #27272A",
-          borderRight: "none", borderRadius: "12px 0 0 12px",
-          cursor: "pointer", whiteSpace: "nowrap",
+          display: "flex", alignItems: "center", gap: 5, padding: "0 12px", height: "100%",
+          background: "#FFF8F0", border: "2px solid #E4D8C8", borderRight: "none",
+          borderRadius: "12px 0 0 12px", cursor: "pointer",
         }}
       >
-        <span style={{ fontSize: "1.1rem" }}>{selected.flag}</span>
-        <span style={{ fontFamily: "'Inter', sans-serif", fontWeight: 500, fontSize: "0.85rem", color: "#A1A1AA" }}>{selected.dial}</span>
-        <span style={{ fontSize: "0.6rem", color: "#52525B", marginLeft: 1 }}>▼</span>
+        <span style={{ fontSize: "1.15rem" }}>{selected.flag}</span>
+        <span style={{ fontFamily: "'Inter', sans-serif", fontWeight: 600, fontSize: "0.85rem", color: "#78716C" }}>{selected.dial}</span>
+        <span style={{ fontSize: "0.6rem", color: "#A8A29E" }}>▼</span>
       </button>
 
       {open && (
-        <div style={{
-          position: "absolute", top: "calc(100% + 6px)", left: 0, zIndex: 100,
-          background: "#18181B", border: "1px solid #27272A",
-          borderRadius: 12, boxShadow: "0 8px 32px rgba(0,0,0,0.6)",
-          width: 260, maxHeight: 280, display: "flex", flexDirection: "column", overflow: "hidden",
-        }}>
-          <div style={{ padding: "8px 8px 6px", borderBottom: "1px solid #27272A" }}>
-            <input
-              ref={searchRef}
-              type="text"
-              placeholder="Search…"
-              value={query}
-              onChange={e => setQuery(e.target.value)}
-              style={{ width: "100%", padding: "6px 10px", background: "#111113", border: "1px solid #27272A", borderRadius: 8, fontFamily: "'Inter', sans-serif", fontSize: "0.85rem", color: "#F4F4F5", outline: "none", boxSizing: "border-box" }}
-            />
+        <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, zIndex: 100, background: "#fff", border: "2px solid #1C1917", borderRadius: 14, boxShadow: "4px 4px 0 #1C1917", width: 260, maxHeight: 280, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+          <div style={{ padding: "8px 8px 6px", borderBottom: "1px solid #E4D8C8" }}>
+            <input ref={searchRef} type="text" placeholder="Search…" value={query} onChange={e => setQuery(e.target.value)}
+              style={{ width: "100%", padding: "6px 10px", background: "#FFF8F0", border: "1.5px solid #E4D8C8", borderRadius: 8, fontFamily: "'Inter'", fontSize: "0.85rem", color: "#1C1917", outline: "none", boxSizing: "border-box" }} />
           </div>
           <div style={{ overflowY: "auto", flex: 1 }}>
-            {filtered.length === 0 && <div style={{ padding: 12, color: "#52525B", fontSize: "0.85rem", textAlign: "center" }}>No results</div>}
+            {filtered.length === 0 && <div style={{ padding: 12, color: "#A8A29E", fontSize: "0.85rem", textAlign: "center" }}>No results</div>}
             {filtered.map(c => (
-              <button
-                key={c.code}
-                type="button"
-                onClick={() => { onChange(c); setOpen(false); setQuery(""); }}
-                style={{
-                  width: "100%", display: "flex", alignItems: "center", gap: 9, padding: "8px 12px",
-                  background: c.code === selected.code ? "rgba(232,69,10,0.12)" : "transparent",
-                  border: "none", cursor: "pointer", textAlign: "left",
-                  borderBottom: "1px solid rgba(39,39,42,0.5)",
-                }}
-              >
+              <button key={c.code} type="button" onClick={() => { onChange(c); setOpen(false); setQuery(""); }}
+                style={{ width: "100%", display: "flex", alignItems: "center", gap: 9, padding: "8px 12px", background: c.code === selected.code ? "#FFF0EB" : "transparent", border: "none", cursor: "pointer", textAlign: "left", borderBottom: "1px solid #F0E8DC" }}>
                 <span style={{ fontSize: "1.1rem", flexShrink: 0 }}>{c.flag}</span>
-                <span style={{ flex: 1, fontFamily: "'Inter', sans-serif", fontSize: "0.83rem", color: "#F4F4F5" }}>{c.name}</span>
-                <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.78rem", color: "#71717A", flexShrink: 0 }}>{c.dial}</span>
+                <span style={{ flex: 1, fontFamily: "'Inter'", fontSize: "0.83rem", color: "#1C1917" }}>{c.name}</span>
+                <span style={{ fontFamily: "'Inter'", fontSize: "0.78rem", color: "#78716C", flexShrink: 0 }}>{c.dial}</span>
               </button>
             ))}
           </div>
@@ -159,19 +129,10 @@ function CountryPicker({ selected, onChange }: { selected: Country; onChange: (c
 function OAuthBtn({ provider, onClick, disabled }: { provider: "google" | "github"; onClick: () => void; disabled: boolean }) {
   const isGoogle = provider === "google";
   return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      style={{
-        width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
-        padding: "11px 16px", background: "#18181B", color: "#F4F4F5",
-        border: "1px solid #27272A", borderRadius: 12,
-        fontFamily: "'Inter', sans-serif", fontWeight: 500, fontSize: "0.93rem",
-        cursor: disabled ? "not-allowed" : "pointer", opacity: disabled ? 0.5 : 1,
-        transition: "background 0.15s, border-color 0.15s",
-      }}
-      onMouseEnter={e => { if (!disabled) e.currentTarget.style.background = "#1E1E23"; }}
-      onMouseLeave={e => { e.currentTarget.style.background = "#18181B"; }}
+    <button onClick={onClick} disabled={disabled}
+      style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 10, padding: "11px 16px", background: "#fff", color: "#1C1917", border: "2px solid #E4D8C8", borderRadius: 12, fontFamily: "'Inter'", fontWeight: 600, fontSize: "0.93rem", cursor: disabled ? "not-allowed" : "pointer", opacity: disabled ? 0.5 : 1, boxShadow: "0 2px 0 #E4D8C8", transition: "transform 0.1s, box-shadow 0.1s" }}
+      onMouseEnter={e => { if (!disabled) { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 3px 0 #E4D8C8"; } }}
+      onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = "0 2px 0 #E4D8C8"; }}
     >
       {isGoogle ? (
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
@@ -193,7 +154,6 @@ function OAuthBtn({ provider, onClick, disabled }: { provider: "google" | "githu
 export default function AuthPage({ mode }: { mode: AuthMode }) {
   const [, setLocation] = useLocation();
   const { user, session } = useAuth();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [localNumber, setLocalNumber] = useState("");
@@ -209,27 +169,26 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
     fetch("https://ipapi.co/json/", { signal: AbortSignal.timeout(4000) })
       .then(r => r.json())
       .then((d: { country_code?: string }) => {
-        if (d.country_code) {
-          const m = COUNTRIES.find(c => c.code === d.country_code);
-          if (m) setCountry(m);
-        }
-      })
-      .catch(() => {});
+        if (d.country_code) { const m = COUNTRIES.find(c => c.code === d.country_code); if (m) setCountry(m); }
+      }).catch(() => {});
   }, []);
 
   useEffect(() => {
-    if (session && user) setLocation(user.onboardingComplete ? "/feed" : "/onboarding");
+    if (session && user) setLocation(user.onboardingComplete ? "/discover" : "/onboarding");
   }, [session, user, setLocation]);
 
   const fullPhone = `${country.dial}${localNumber.replace(/^0+/, "")}`;
-
   const isSignUp = mode === "sign-up";
+
   const F: React.CSSProperties = {
-    width: "100%", padding: "0.7rem 1rem",
-    background: "#18181B", border: "1px solid #27272A", borderRadius: 12,
-    fontFamily: "'Inter', sans-serif", fontSize: "0.93rem", color: "#F4F4F5",
+    width: "100%", padding: "0.75rem 1rem",
+    background: "#FFF8F0", border: "2px solid #E4D8C8", borderRadius: 12,
+    fontFamily: "'Inter'", fontSize: "0.95rem", color: "#1C1917",
     outline: "none", boxSizing: "border-box", transition: "border-color 0.15s, box-shadow 0.15s",
   };
+
+  const focusStyle = (e: React.FocusEvent<HTMLInputElement>) => { e.currentTarget.style.borderColor = "#FF5A1F"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(255,90,31,0.15)"; };
+  const blurStyle = (e: React.FocusEvent<HTMLInputElement>) => { e.currentTarget.style.borderColor = "#E4D8C8"; e.currentTarget.style.boxShadow = "none"; };
 
   const handleEmail = async (e: React.FormEvent) => {
     e.preventDefault(); setLoading(true); setError("");
@@ -242,8 +201,7 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
       }
-    } catch (e: any) { setError(e.message); }
-    finally { setLoading(false); }
+    } catch (e: any) { setError(e.message); } finally { setLoading(false); }
   };
 
   const handleSendOtp = async (e: React.FormEvent) => {
@@ -252,8 +210,7 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
       const { error } = await supabase.auth.signInWithOtp({ phone: fullPhone });
       if (error) throw error;
       setOtpSent(true);
-    } catch (e: any) { setError(e.message); }
-    finally { setLoading(false); }
+    } catch (e: any) { setError(e.message); } finally { setLoading(false); }
   };
 
   const handleVerifyOtp = async (e: React.FormEvent) => {
@@ -261,121 +218,96 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
     try {
       const { error } = await supabase.auth.verifyOtp({ phone: fullPhone, token: otp, type: "sms" });
       if (error) throw error;
-    } catch (e: any) { setError(e.message); }
-    finally { setLoading(false); }
+    } catch (e: any) { setError(e.message); } finally { setLoading(false); }
   };
 
   const handleOAuth = async (provider: "google" | "github") => {
     setLoading(true); setError("");
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: { redirectTo: `${window.location.origin}/onboarding` },
-    });
+    const { error } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo: `${window.location.origin}/onboarding` } });
     if (error) setError(error.message);
     setLoading(false);
   };
 
   return (
-    <div style={{ minHeight: "100svh", background: "#080809", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px 16px", position: "relative" }}>
-      {/* Background glow */}
-      <div style={{ position: "absolute", top: "30%", left: "50%", transform: "translateX(-50%)", width: 500, height: 300, background: "radial-gradient(ellipse, rgba(232,69,10,0.06) 0%, transparent 70%)", pointerEvents: "none" }} />
+    <div style={{ minHeight: "100svh", background: "#FFFCF7", display: "flex", alignItems: "center", justifyContent: "center", padding: "28px 16px" }}>
+      <div style={{ width: "100%", maxWidth: 400 }}>
 
-      <div style={{ width: "100%", maxWidth: 400, position: "relative", zIndex: 1 }}>
         {/* Logo */}
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 32 }}>
-          <div style={{ width: 34, height: 34, background: "#E8450A", borderRadius: 9, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: "1.05rem", color: "#fff", boxShadow: "0 3px 10px rgba(232,69,10,0.4)", flexShrink: 0 }}>W</div>
-          <span style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 700, fontSize: "1.2rem", color: "#F4F4F5" }}>Wozzer</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 28 }}>
+          <div style={{ width: 38, height: 38, background: "#FF5A1F", border: "2.5px solid #1C1917", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Fraunces',serif", fontWeight: 700, fontSize: "1.1rem", color: "#fff", boxShadow: "3px 3px 0 #1C1917" }}>W</div>
+          <span style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 700, fontSize: "1.25rem", color: "#1C1917" }}>Wozzer</span>
         </div>
 
         {/* Card */}
-        <div style={{ background: "#111113", border: "1px solid #27272A", borderRadius: 16, padding: "28px 24px" }}>
-          <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 700, fontSize: "1.6rem", color: "#F4F4F5", marginBottom: 4, lineHeight: 1.15 }}>
-            {isSignUp ? "Create your account" : "Welcome back"}
-          </h1>
-          <p style={{ fontFamily: "'Inter', sans-serif", color: "#52525B", fontSize: "0.9rem", marginBottom: 22 }}>
-            {isSignUp ? "For builders aged 13–18" : "Sign in to continue"}
-          </p>
+        <div style={{ position: "relative" }}>
+          <div className="washi washi-orange washi-top" style={{ width: 80 }} />
+          <div className="scrap-card" style={{ padding: "28px 22px 24px" }}>
+            <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", fontWeight: 700, fontSize: "1.65rem", color: "#1C1917", marginBottom: 4, lineHeight: 1.15 }}>
+              {isSignUp ? "Create your account" : "Welcome back"}
+            </h1>
+            <p style={{ fontFamily: "'Inter'", color: "#78716C", fontSize: "0.9rem", marginBottom: 20 }}>
+              {isSignUp ? "For builders aged 13–18" : "Sign in to continue"}
+            </p>
 
-          {/* OAuth */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
-            <OAuthBtn provider="google" onClick={() => handleOAuth("google")} disabled={loading} />
-            <OAuthBtn provider="github" onClick={() => handleOAuth("github")} disabled={loading} />
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 18 }}>
+              <OAuthBtn provider="google" onClick={() => handleOAuth("google")} disabled={loading} />
+              <OAuthBtn provider="github" onClick={() => handleOAuth("github")} disabled={loading} />
+            </div>
+
+            <div className="divider" style={{ marginBottom: 18 }}>or</div>
+
+            {inputMode === "email" ? (
+              <form onSubmit={handleEmail} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <input type="email" placeholder="Email address" value={email} onChange={e => setEmail(e.target.value)} required autoComplete="email" style={F} onFocus={focusStyle} onBlur={blurStyle} />
+                <input type="password" placeholder={isSignUp ? "Create a password" : "Password"} value={password} onChange={e => setPassword(e.target.value)} required autoComplete={isSignUp ? "new-password" : "current-password"} style={F} onFocus={focusStyle} onBlur={blurStyle} />
+                {success && <p style={{ color: "#46A302", fontSize: "0.85rem", fontFamily: "'Inter'" }}>{success}</p>}
+                {error && <p style={{ color: "#FF4B4B", fontSize: "0.85rem", fontFamily: "'Inter'" }}>{error}</p>}
+                <button type="submit" disabled={loading} className="btn-primary" style={{ marginTop: 4, width: "100%" }}>
+                  {loading ? "..." : isSignUp ? "Create account" : "Sign in"}
+                </button>
+                <button type="button" onClick={() => { setInputMode("phone"); setError(""); }} style={{ background: "none", border: "none", cursor: "pointer", fontFamily: "'Inter'", fontSize: "0.88rem", color: "#78716C", textAlign: "center", padding: "4px 0" }}>
+                  Use phone number instead
+                </button>
+              </form>
+
+            ) : !otpSent ? (
+              <form onSubmit={handleSendOtp} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <div style={{ display: "flex", alignItems: "stretch", height: 48 }}>
+                  <CountryPicker selected={country} onChange={c => { setCountry(c); setError(""); }} />
+                  <input type="tel" placeholder="Phone number" value={localNumber} onChange={e => setLocalNumber(e.target.value.replace(/[^\d\s\-()]/g, ""))} required autoComplete="tel-national" inputMode="tel"
+                    style={{ ...F, borderRadius: "0 12px 12px 0", flex: 1, minWidth: 0, height: "100%" }} onFocus={focusStyle} onBlur={blurStyle} />
+                </div>
+                <p style={{ fontFamily: "'Inter'", fontSize: "0.75rem", color: "#A8A29E", marginTop: -4 }}>{country.flag} {country.name} auto-detected · tap flag to change</p>
+                {error && <p style={{ color: "#FF4B4B", fontSize: "0.85rem", fontFamily: "'Inter'" }}>{error}</p>}
+                <button type="submit" disabled={loading || !localNumber.trim()} className="btn-primary" style={{ marginTop: 4, width: "100%" }}>
+                  {loading ? "..." : "Send code"}
+                </button>
+                <button type="button" onClick={() => { setInputMode("email"); setError(""); }} style={{ background: "none", border: "none", cursor: "pointer", fontFamily: "'Inter'", fontSize: "0.88rem", color: "#78716C", textAlign: "center", padding: "4px 0" }}>
+                  Use email instead
+                </button>
+              </form>
+
+            ) : (
+              <form onSubmit={handleVerifyOtp} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <p style={{ fontFamily: "'Inter'", color: "#78716C", fontSize: "0.9rem", marginBottom: 4 }}>Code sent to {country.flag} {fullPhone}</p>
+                <input type="text" placeholder="000000" value={otp} onChange={e => setOtp(e.target.value)} required maxLength={6} inputMode="numeric"
+                  style={{ ...F, letterSpacing: "0.4em", fontSize: "1.5rem", textAlign: "center" }} />
+                {error && <p style={{ color: "#FF4B4B", fontSize: "0.85rem", fontFamily: "'Inter'" }}>{error}</p>}
+                <button type="submit" disabled={loading} className="btn-primary" style={{ marginTop: 4, width: "100%" }}>
+                  {loading ? "..." : "Verify"}
+                </button>
+                <button type="button" onClick={() => { setOtpSent(false); setOtp(""); }} style={{ background: "none", border: "none", cursor: "pointer", fontFamily: "'Inter'", fontSize: "0.88rem", color: "#78716C", textAlign: "center", padding: "4px 0" }}>
+                  ← Change number
+                </button>
+              </form>
+            )}
           </div>
-
-          <div className="divider" style={{ marginBottom: 20 }}>or</div>
-
-          {/* Email form */}
-          {inputMode === "email" ? (
-            <form onSubmit={handleEmail} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              <input type="email" placeholder="Email address" value={email} onChange={e => setEmail(e.target.value)} required autoComplete="email" style={F}
-                onFocus={e => { e.currentTarget.style.borderColor = "#E8450A"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(232,69,10,0.15)"; }}
-                onBlur={e => { e.currentTarget.style.borderColor = "#27272A"; e.currentTarget.style.boxShadow = "none"; }}
-              />
-              <input type="password" placeholder={isSignUp ? "Create a password" : "Password"} value={password} onChange={e => setPassword(e.target.value)} required autoComplete={isSignUp ? "new-password" : "current-password"} style={F}
-                onFocus={e => { e.currentTarget.style.borderColor = "#E8450A"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(232,69,10,0.15)"; }}
-                onBlur={e => { e.currentTarget.style.borderColor = "#27272A"; e.currentTarget.style.boxShadow = "none"; }}
-              />
-              {success && <p style={{ color: "#4ADE80", fontSize: "0.85rem", fontFamily: "'Inter', sans-serif" }}>{success}</p>}
-              {error && <p style={{ color: "#F87171", fontSize: "0.85rem", fontFamily: "'Inter', sans-serif" }}>{error}</p>}
-              <button type="submit" disabled={loading} className="btn-primary" style={{ marginTop: 4, width: "100%", padding: "0.75rem" }}>
-                {loading ? "..." : isSignUp ? "Create account" : "Sign in"}
-              </button>
-              <button type="button" onClick={() => { setInputMode("phone"); setError(""); }} style={{ background: "none", border: "none", cursor: "pointer", fontFamily: "'Inter', sans-serif", fontSize: "0.88rem", color: "#71717A", textAlign: "center", padding: "4px 0" }}>
-                Use phone number instead
-              </button>
-            </form>
-
-          ) : !otpSent ? (
-            <form onSubmit={handleSendOtp} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              <div style={{ display: "flex", alignItems: "stretch", height: 44 }}>
-                <CountryPicker selected={country} onChange={c => { setCountry(c); setError(""); }} />
-                <input
-                  type="tel" placeholder="Phone number" value={localNumber}
-                  onChange={e => setLocalNumber(e.target.value.replace(/[^\d\s\-()]/g, ""))}
-                  required autoComplete="tel-national" inputMode="tel"
-                  style={{ ...F, borderRadius: "0 12px 12px 0", flex: 1, minWidth: 0, height: "100%" }}
-                  onFocus={e => { e.currentTarget.style.borderColor = "#E8450A"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(232,69,10,0.15)"; }}
-                  onBlur={e => { e.currentTarget.style.borderColor = "#27272A"; e.currentTarget.style.boxShadow = "none"; }}
-                />
-              </div>
-              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: "0.75rem", color: "#52525B", marginTop: -4 }}>
-                {country.flag} {country.name} auto-detected · tap flag to change
-              </p>
-              {error && <p style={{ color: "#F87171", fontSize: "0.85rem", fontFamily: "'Inter', sans-serif" }}>{error}</p>}
-              <button type="submit" disabled={loading || !localNumber.trim()} className="btn-primary" style={{ marginTop: 4, width: "100%", padding: "0.75rem" }}>
-                {loading ? "..." : "Send code"}
-              </button>
-              <button type="button" onClick={() => { setInputMode("email"); setError(""); }} style={{ background: "none", border: "none", cursor: "pointer", fontFamily: "'Inter', sans-serif", fontSize: "0.88rem", color: "#71717A", textAlign: "center", padding: "4px 0" }}>
-                Use email instead
-              </button>
-            </form>
-
-          ) : (
-            <form onSubmit={handleVerifyOtp} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              <p style={{ fontFamily: "'Inter', sans-serif", color: "#71717A", fontSize: "0.9rem", marginBottom: 4 }}>
-                Enter the code sent to {country.flag} {fullPhone}
-              </p>
-              <input
-                type="text" placeholder="000000" value={otp}
-                onChange={e => setOtp(e.target.value)} required maxLength={6} inputMode="numeric"
-                style={{ ...F, letterSpacing: "0.4em", fontSize: "1.5rem", textAlign: "center" }}
-              />
-              {error && <p style={{ color: "#F87171", fontSize: "0.85rem", fontFamily: "'Inter', sans-serif" }}>{error}</p>}
-              <button type="submit" disabled={loading} className="btn-primary" style={{ marginTop: 4, width: "100%", padding: "0.75rem" }}>
-                {loading ? "..." : "Verify"}
-              </button>
-              <button type="button" onClick={() => { setOtpSent(false); setOtp(""); }} style={{ background: "none", border: "none", cursor: "pointer", fontFamily: "'Inter', sans-serif", fontSize: "0.88rem", color: "#71717A", textAlign: "center", padding: "4px 0" }}>
-                ← Change number
-              </button>
-            </form>
-          )}
         </div>
 
-        {/* Switch mode */}
-        <p style={{ marginTop: 20, textAlign: "center", fontFamily: "'Inter', sans-serif", color: "#52525B", fontSize: "0.88rem" }}>
+        <p style={{ marginTop: 18, textAlign: "center", fontFamily: "'Inter'", color: "#78716C", fontSize: "0.88rem" }}>
           {isSignUp
-            ? <> Already have an account? <a href="/sign-in" style={{ color: "#E8450A", fontWeight: 600, textDecoration: "none" }}>Sign in</a></>
-            : <> New to Wozzer? <a href="/sign-up" style={{ color: "#E8450A", fontWeight: 600, textDecoration: "none" }}>Apply now</a></>
+            ? <> Already have an account? <a href="/sign-in" style={{ color: "#FF5A1F", fontWeight: 700, textDecoration: "none" }}>Sign in</a></>
+            : <> New to Wozzer? <a href="/sign-up" style={{ color: "#FF5A1F", fontWeight: 700, textDecoration: "none" }}>Apply now</a></>
           }
         </p>
       </div>
