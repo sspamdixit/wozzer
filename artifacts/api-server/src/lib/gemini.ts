@@ -1,12 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const apiKey = process.env.GEMINI_API_KEY;
-if (!apiKey) {
-  throw new Error("GEMINI_API_KEY must be set");
-}
-
-const genAI = new GoogleGenerativeAI(apiKey);
-
 const MODEL_CASCADE = [
   "gemini-2.5-pro",
   "gemini-2.0-flash",
@@ -14,6 +7,14 @@ const MODEL_CASCADE = [
   "gemini-1.5-flash",
   "gemini-1.0-pro",
 ];
+
+function getClient(): GoogleGenerativeAI {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error("GEMINI_API_KEY is not set");
+  }
+  return new GoogleGenerativeAI(apiKey);
+}
 
 async function tryModels(fn: (modelName: string) => Promise<string>): Promise<string> {
   let lastError: unknown;
@@ -31,6 +32,7 @@ export async function chat(
   systemPrompt: string,
   messages: Array<{ role: "user" | "assistant"; content: string }>
 ): Promise<string> {
+  const genAI = getClient();
   return tryModels(async (modelName) => {
     const model = genAI.getGenerativeModel({ model: modelName });
     const history = messages.slice(0, -1).map((m) => ({
@@ -45,6 +47,7 @@ export async function chat(
 }
 
 export async function generateText(prompt: string): Promise<string> {
+  const genAI = getClient();
   return tryModels(async (modelName) => {
     const model = genAI.getGenerativeModel({ model: modelName });
     const result = await model.generateContent(prompt);

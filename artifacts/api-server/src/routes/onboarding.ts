@@ -33,194 +33,230 @@ If they need homework, respond ONLY with this JSON (no other text):
 If they've convinced you, respond ONLY with this JSON:
 {"approved": true, "summary": "2-sentence summary of their idea"}`;
 
-router.post("/onboarding/start", requireAuth, async (req, res): Promise<void> => {
-  const authReq = req as typeof req & { user: typeof usersTable.$inferSelect };
-  const parsed = z.object({ path: z.enum(["visionary", "wozniak"]) }).safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: "path must be visionary or wozniak" });
-    return;
-  }
-
-  const { path } = parsed.data;
-  const sessionId = crypto.randomUUID();
-
-  const firstMessage = path === "visionary"
-    ? "Tell me your idea. What problem are you solving?"
-    : "What do you actually build? Pick your main thing.";
-
-  const messages: ChatMessage[] = [
-    { role: "assistant", content: firstMessage, timestamp: new Date().toISOString() },
-  ];
-
-  await db.insert(onboardingSessionsTable).values({
-    id: sessionId,
-    userId: authReq.user.id,
-    path,
-    messages,
-    phase: "interview",
-    isComplete: false,
-    homeworkQuestions: [],
-  });
-
-  res.json({ sessionId, messages, phase: "interview", isComplete: false, homeworkQuestions: [], summary: null });
-});
-
-router.post("/onboarding/chat", requireAuth, async (req, res): Promise<void> => {
-  const authReq = req as typeof req & { user: typeof usersTable.$inferSelect };
-  const parsed = z.object({ message: z.string().min(1) }).safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: "message required" });
-    return;
-  }
-
-  const [session] = await db
-    .select()
-    .from(onboardingSessionsTable)
-    .where(eq(onboardingSessionsTable.userId, authReq.user.id));
-
-  if (!session) {
-    res.status(404).json({ error: "No active onboarding session" });
-    return;
-  }
-
-  const existingMessages = session.messages as ChatMessage[];
-  const userMessage: ChatMessage = { role: "user", content: parsed.data.message, timestamp: new Date().toISOString() };
-  const allMessages = [...existingMessages, userMessage];
-
-  const aiResponse = await chat(VISIONARY_SYSTEM, allMessages);
-
-  let phase = session.phase as string;
-  let homeworkQuestions = session.homeworkQuestions as string[];
-  let summary: string | null = session.summary ?? null;
-  let isComplete = session.isComplete;
-  let assistantContent = aiResponse;
-
+router.post("/onboarding/start", requireAuth, async (req, res, next): Promise<void> => {
   try {
-    const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      const parsed2 = JSON.parse(jsonMatch[0]);
-      if (parsed2.homework && Array.isArray(parsed2.homework)) {
-        homeworkQuestions = parsed2.homework;
-        summary = parsed2.summary ?? null;
-        phase = "homework";
-        assistantContent = parsed2.homework.map((q: string, i: number) => `${i + 1}. ${q}`).join("\n");
-      } else if (parsed2.approved === true) {
-        summary = parsed2.summary ?? null;
-        phase = "complete";
-        isComplete = true;
-        assistantContent = "You're through. Welcome to Wozzer.";
-      }
+    const authReq = req as typeof req & { user: typeof usersTable.$inferSelect };
+    const parsed = z.object({ path: z.enum(["visionary", "wozniak"]) }).safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: "path must be visionary or wozniak" });
+      return;
     }
-  } catch (_) { /* not JSON, continue */ }
 
-  const assistantMessage: ChatMessage = { role: "assistant", content: assistantContent, timestamp: new Date().toISOString() };
-  const updatedMessages = [...allMessages, assistantMessage];
+    const { path } = parsed.data;
+    const sessionId = crypto.randomUUID();
 
-  await db
-    .update(onboardingSessionsTable)
-    .set({ messages: updatedMessages, phase, homeworkQuestions, summary, isComplete, updatedAt: new Date() })
-    .where(eq(onboardingSessionsTable.id, session.id));
+    const firstMessage = path === "visionary"
+      ? "Tell me your idea. What problem are you solving?"
+      : "What do you actually build? Pick your main thing.";
 
-  res.json({ sessionId: session.id, messages: updatedMessages, phase, isComplete, homeworkQuestions, summary });
+    const messages: ChatMessage[] = [
+      { role: "assistant", content: firstMessage, timestamp: new Date().toISOString() },
+    ];
+
+    await db.insert(onboardingSessionsTable).values({
+      id: sessionId,
+      userId: authReq.user.id,
+      path,
+      messages,
+      phase: "interview",
+      isComplete: false,
+      homeworkQuestions: [],
+    });
+
+    res.json({ sessionId, messages, phase: "interview", isComplete: false, homeworkQuestions: [], summary: null });
+  } catch (err) {
+    next(err);
+  }
 });
 
-router.post("/onboarding/complete", requireAuth, async (req, res): Promise<void> => {
-  const authReq = req as typeof req & { user: typeof usersTable.$inferSelect };
-  const parsed = z.object({ summary: z.string() }).safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: "summary required" });
-    return;
+router.post("/onboarding/chat", requireAuth, async (req, res, next): Promise<void> => {
+  try {
+    const authReq = req as typeof req & { user: typeof usersTable.$inferSelect };
+    const parsed = z.object({ message: z.string().min(1) }).safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: "message required" });
+      return;
+    }
+
+    const [session] = await db
+      .select()
+      .from(onboardingSessionsTable)
+      .where(eq(onboardingSessionsTable.userId, authReq.user.id));
+
+    if (!session) {
+      res.status(404).json({ error: "No active onboarding session" });
+      return;
+    }
+
+    const existingMessages = session.messages as ChatMessage[];
+    const userMessage: ChatMessage = { role: "user", content: parsed.data.message, timestamp: new Date().toISOString() };
+    const allMessages = [...existingMessages, userMessage];
+
+    let aiResponse: string;
+    try {
+      aiResponse = await chat(VISIONARY_SYSTEM, allMessages);
+    } catch (geminiErr: unknown) {
+      const msg = geminiErr instanceof Error ? geminiErr.message : String(geminiErr);
+      res.status(503).json({ error: "AI service unavailable", details: msg });
+      return;
+    }
+
+    let phase = session.phase as string;
+    let homeworkQuestions = session.homeworkQuestions as string[];
+    let summary: string | null = session.summary ?? null;
+    let isComplete = session.isComplete;
+    let assistantContent = aiResponse;
+
+    try {
+      const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed2 = JSON.parse(jsonMatch[0]);
+        if (parsed2.homework && Array.isArray(parsed2.homework)) {
+          homeworkQuestions = parsed2.homework;
+          summary = parsed2.summary ?? null;
+          phase = "homework";
+          assistantContent = parsed2.homework.map((q: string, i: number) => `${i + 1}. ${q}`).join("\n");
+        } else if (parsed2.approved === true) {
+          summary = parsed2.summary ?? null;
+          phase = "complete";
+          isComplete = true;
+          assistantContent = "You're through. Welcome to Wozzer.";
+        }
+      }
+    } catch (_) { /* not JSON, continue */ }
+
+    const assistantMessage: ChatMessage = { role: "assistant", content: assistantContent, timestamp: new Date().toISOString() };
+    const updatedMessages = [...allMessages, assistantMessage];
+
+    await db
+      .update(onboardingSessionsTable)
+      .set({ messages: updatedMessages, phase, homeworkQuestions, summary, isComplete, updatedAt: new Date() })
+      .where(eq(onboardingSessionsTable.id, session.id));
+
+    res.json({ sessionId: session.id, messages: updatedMessages, phase, isComplete, homeworkQuestions, summary });
+  } catch (err) {
+    next(err);
   }
-
-  const [session] = await db
-    .select()
-    .from(onboardingSessionsTable)
-    .where(eq(onboardingSessionsTable.userId, authReq.user.id));
-
-  if (!session) {
-    res.status(404).json({ error: "No active onboarding session" });
-    return;
-  }
-
-  const role = session.path as "visionary" | "wozniak";
-
-  await db
-    .update(onboardingSessionsTable)
-    .set({ isComplete: true, summary: parsed.data.summary, updatedAt: new Date() })
-    .where(eq(onboardingSessionsTable.id, session.id));
-
-  const [updatedUser] = await db
-    .update(usersTable)
-    .set({ role, onboardingComplete: true, aiSummary: parsed.data.summary, level: "beginner", updatedAt: new Date() })
-    .where(eq(usersTable.id, authReq.user.id))
-    .returning();
-
-  await awardXp(authReq.user.id, 75);
-  await updateStreak(authReq.user.id);
-  await grantAchievement(authReq.user.id, "interview_complete");
-  await recalculateVisibilityScore(authReq.user.id);
-
-  const [refreshed] = await db.select().from(usersTable).where(eq(usersTable.id, authReq.user.id));
-  res.json(formatUser(refreshed ?? updatedUser));
 });
 
-router.post("/onboarding/skip", requireAuth, async (req, res): Promise<void> => {
-  const authReq = req as typeof req & { user: typeof usersTable.$inferSelect };
-  const parsed = z.object({ path: z.enum(["visionary", "wozniak"]) }).safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: "path required" });
-    return;
+router.post("/onboarding/complete", requireAuth, async (req, res, next): Promise<void> => {
+  try {
+    const authReq = req as typeof req & { user: typeof usersTable.$inferSelect };
+    const parsed = z.object({ summary: z.string() }).safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: "summary required" });
+      return;
+    }
+
+    const [session] = await db
+      .select()
+      .from(onboardingSessionsTable)
+      .where(eq(onboardingSessionsTable.userId, authReq.user.id));
+
+    if (!session) {
+      res.status(404).json({ error: "No active onboarding session" });
+      return;
+    }
+
+    const role = session.path as "visionary" | "wozniak";
+
+    await db
+      .update(onboardingSessionsTable)
+      .set({ isComplete: true, summary: parsed.data.summary, updatedAt: new Date() })
+      .where(eq(onboardingSessionsTable.id, session.id));
+
+    const [updatedUser] = await db
+      .update(usersTable)
+      .set({ role, onboardingComplete: true, aiSummary: parsed.data.summary, level: "beginner", updatedAt: new Date() })
+      .where(eq(usersTable.id, authReq.user.id))
+      .returning();
+
+    await awardXp(authReq.user.id, 75);
+    await updateStreak(authReq.user.id);
+    await grantAchievement(authReq.user.id, "interview_complete");
+    await recalculateVisibilityScore(authReq.user.id);
+
+    const [refreshed] = await db.select().from(usersTable).where(eq(usersTable.id, authReq.user.id));
+    res.json(formatUser(refreshed ?? updatedUser));
+  } catch (err) {
+    next(err);
   }
-
-  const [updatedUser] = await db
-    .update(usersTable)
-    .set({ role: parsed.data.path, onboardingComplete: true, updatedAt: new Date() })
-    .where(eq(usersTable.id, authReq.user.id))
-    .returning();
-
-  await recalculateVisibilityScore(authReq.user.id);
-
-  res.json(formatUser(updatedUser));
 });
 
-router.post("/onboarding/wozniak/skills", requireAuth, async (req, res): Promise<void> => {
-  const parsed = z.object({ skills: z.array(z.string()).min(1) }).safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: "skills array required" });
-    return;
+router.post("/onboarding/skip", requireAuth, async (req, res, next): Promise<void> => {
+  try {
+    const authReq = req as typeof req & { user: typeof usersTable.$inferSelect };
+    const parsed = z.object({ path: z.enum(["visionary", "wozniak"]) }).safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: "path required" });
+      return;
+    }
+
+    const [updatedUser] = await db
+      .update(usersTable)
+      .set({ role: parsed.data.path, onboardingComplete: true, updatedAt: new Date() })
+      .where(eq(usersTable.id, authReq.user.id))
+      .returning();
+
+    await recalculateVisibilityScore(authReq.user.id);
+
+    res.json(formatUser(updatedUser));
+  } catch (err) {
+    next(err);
   }
+});
 
-  const { skills } = parsed.data;
-  const primarySkill = skills[0];
+router.post("/onboarding/wozniak/skills", requireAuth, async (req, res, next): Promise<void> => {
+  try {
+    const parsed = z.object({ skills: z.array(z.string()).min(1) }).safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: "skills array required" });
+      return;
+    }
 
-  const prompt = `Generate a short technical challenge (5-10 minutes) for a young builder (13-18) claiming to know: ${skills.join(", ")}.
+    const { skills } = parsed.data;
+    const primarySkill = skills[0];
+
+    const prompt = `Generate a short technical challenge (5-10 minutes) for a young builder (13-18) claiming to know: ${skills.join(", ")}.
 The challenge should test real understanding — not definitions.
 Keep it practical: a code snippet, design decision, or explain-the-output problem.
 
 Respond ONLY with valid JSON:
 {"challengeId": "c_${Date.now()}", "skill": "${primarySkill}", "prompt": "the challenge here (2-4 sentences, code example if relevant)"}`;
 
-  const response = await generateText(prompt);
-  const jsonMatch = response.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) {
-    res.status(500).json({ error: "Failed to generate challenge" });
-    return;
-  }
+    let response: string;
+    try {
+      response = await generateText(prompt);
+    } catch (geminiErr: unknown) {
+      const msg = geminiErr instanceof Error ? geminiErr.message : String(geminiErr);
+      res.status(503).json({ error: "AI service unavailable", details: msg });
+      return;
+    }
 
-  res.json(JSON.parse(jsonMatch[0]));
+    const jsonMatch = response.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      res.status(502).json({ error: "Failed to generate challenge — AI returned unexpected format" });
+      return;
+    }
+
+    res.json(JSON.parse(jsonMatch[0]));
+  } catch (err) {
+    next(err);
+  }
 });
 
-router.post("/onboarding/wozniak/challenge", requireAuth, async (req, res): Promise<void> => {
-  const authReq = req as typeof req & { user: typeof usersTable.$inferSelect };
-  const parsed = z.object({ challengeId: z.string(), answer: z.string().min(1) }).safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: "challengeId and answer required" });
-    return;
-  }
+router.post("/onboarding/wozniak/challenge", requireAuth, async (req, res, next): Promise<void> => {
+  try {
+    const authReq = req as typeof req & { user: typeof usersTable.$inferSelect };
+    const parsed = z.object({ challengeId: z.string(), answer: z.string().min(1) }).safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: "challengeId and answer required" });
+      return;
+    }
 
-  const { challengeId, answer } = parsed.data;
+    const { challengeId, answer } = parsed.data;
 
-  const prompt = `A young builder (13-18) submitted this answer to a technical challenge.
+    const prompt = `A young builder (13-18) submitted this answer to a technical challenge.
 Challenge ID: ${challengeId}
 Their answer: ${answer}
 
@@ -232,39 +268,50 @@ Assess their level honestly:
 Respond ONLY with valid JSON:
 {"level": "beginner"|"intermediate"|"advanced", "feedback": "1-2 sentences, honest and specific"}`;
 
-  const response = await generateText(prompt);
-  const jsonMatch = response.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) {
-    res.status(500).json({ error: "Failed to evaluate" });
-    return;
-  }
+    let response: string;
+    try {
+      response = await generateText(prompt);
+    } catch (geminiErr: unknown) {
+      const msg = geminiErr instanceof Error ? geminiErr.message : String(geminiErr);
+      res.status(503).json({ error: "AI service unavailable", details: msg });
+      return;
+    }
 
-  const result = JSON.parse(jsonMatch[0]);
-  const level = ["beginner", "intermediate", "advanced"].includes(result.level) ? result.level : "beginner";
+    const jsonMatch = response.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      res.status(502).json({ error: "Failed to evaluate — AI returned unexpected format" });
+      return;
+    }
 
-  const [session] = await db
-    .select()
-    .from(onboardingSessionsTable)
-    .where(eq(onboardingSessionsTable.userId, authReq.user.id));
+    const result = JSON.parse(jsonMatch[0]);
+    const level = ["beginner", "intermediate", "advanced"].includes(result.level) ? result.level : "beginner";
 
-  if (session) {
+    const [session] = await db
+      .select()
+      .from(onboardingSessionsTable)
+      .where(eq(onboardingSessionsTable.userId, authReq.user.id));
+
+    if (session) {
+      await db
+        .update(onboardingSessionsTable)
+        .set({ isComplete: true, phase: "complete", updatedAt: new Date() })
+        .where(eq(onboardingSessionsTable.id, session.id));
+    }
+
     await db
-      .update(onboardingSessionsTable)
-      .set({ isComplete: true, phase: "complete", updatedAt: new Date() })
-      .where(eq(onboardingSessionsTable.id, session.id));
+      .update(usersTable)
+      .set({ role: "wozniak", onboardingComplete: true, level, updatedAt: new Date() })
+      .where(eq(usersTable.id, authReq.user.id));
+
+    await awardXp(authReq.user.id, 75);
+    await updateStreak(authReq.user.id);
+    await grantAchievement(authReq.user.id, "challenge_complete");
+    await recalculateVisibilityScore(authReq.user.id);
+
+    res.json({ level, feedback: result.feedback });
+  } catch (err) {
+    next(err);
   }
-
-  await db
-    .update(usersTable)
-    .set({ role: "wozniak", onboardingComplete: true, level, updatedAt: new Date() })
-    .where(eq(usersTable.id, authReq.user.id));
-
-  await awardXp(authReq.user.id, 75);
-  await updateStreak(authReq.user.id);
-  await grantAchievement(authReq.user.id, "challenge_complete");
-  await recalculateVisibilityScore(authReq.user.id);
-
-  res.json({ level, feedback: result.feedback });
 });
 
 export default router;

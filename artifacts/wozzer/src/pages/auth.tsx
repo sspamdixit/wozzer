@@ -458,7 +458,7 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
     setLoading(true); setError("");
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
-      options: { redirectTo: `${window.location.origin}${import.meta.env.BASE_URL}` },
+      options: { redirectTo: `${window.location.origin}/onboarding` },
     });
     if (error) setError(error.message);
     setLoading(false);

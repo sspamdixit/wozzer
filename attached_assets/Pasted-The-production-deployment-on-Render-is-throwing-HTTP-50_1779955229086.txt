@@ -1,0 +1,51 @@
+The production deployment on Render is throwing HTTP 500 errors on these endpoints:
+
+api/onboarding/start
+api/onboarding/wozniak/skills
+api/auth/me
+
+Fix all of the following:
+1. Push database schema to production
+Add a script that can be run to push the Drizzle schema to the production database. In package.json at root level add:
+json"db:push": "pnpm --filter @workspace/db run push"
+Then run it now against the production DATABASE_URL to make sure all tables exist.
+2. Fix auth/me endpoint
+The /api/auth/me endpoint is returning 500. It should:
+
+Read the session from Supabase using the bearer token in the Authorization header
+Return the user object if valid
+Return 401 if no valid session, not 500
+
+Fix error handling so it never returns 500 — always returns a proper JSON error response with the correct status code.
+3. Fix onboarding endpoints
+Both /api/onboarding/start and /api/onboarding/wozniak/skills are returning 500.
+Fix error handling on both — wrap all logic in try/catch and return proper JSON error responses instead of crashing.
+For the Gemini API calls specifically:
+
+Wrap every Gemini call in try/catch
+If Gemini fails, return a clear JSON error: { error: "AI service unavailable", details: "..." }
+Never let an unhandled Gemini error crash the entire endpoint
+Make sure the cascading model fallback is actually working: try gemini-2.5-pro first, then gemini-2.0-flash, then gemini-1.5-pro, then gemini-1.5-flash, then gemini-1.0-pro
+
+4. Fix redirect URL after OAuth
+After Google or GitHub login, the app is redirecting to localhost:3000 instead of wozzer.onrender.com.
+Find every signInWithOAuth call in artifacts/wozzer/src and make sure the redirectTo option uses window.location.origin instead of any hardcoded URL:
+js// Wrong
+redirectTo: 'http://localhost:3000'
+
+// Correct
+redirectTo: `${window.location.origin}/onboarding`
+5. Global error handling on backend
+Add a global error handler to Express in artifacts/api-server/src/app.ts that catches any unhandled errors and returns JSON instead of HTML:
+jsapp.use((err, req, res, next) => {
+  console.error(err)
+  res.status(500).json({ 
+    error: 'Internal server error',
+    message: err.message 
+  })
+})
+This stops the frontend from ever receiving raw HTML error pages.
+6. After all fixes:
+
+Run pnpm run typecheck — must pass
+Run pnpm run build — must pass

@@ -1,4 +1,4 @@
-import express, { type Express } from "express";
+import express, { type Express, type Request, type Response, type NextFunction } from "express";
 import cors from "cors";
 import pinoHttp from "pino-http";
 import path from "path";
@@ -39,5 +39,14 @@ if (process.env.NODE_ENV === "production") {
     });
   }
 }
+
+// Global error handler — always returns JSON, never raw HTML
+app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+  logger.error(err);
+  res.status(500).json({
+    error: "Internal server error",
+    message: err.message,
+  });
+});
 
 export default app;
